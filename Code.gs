@@ -21,7 +21,7 @@ const DRIVE_FOLDER_NAME = 'FireCheck_Photos';
 const NOTIFY_DAYS_BEFORE_EXPIRE = 60;   // แจ้งเตือนล่วงหน้ากี่วันก่อนหมดอายุ
 const INSPECT_INTERVAL_DAYS = 30;       // ถังที่ไม่ได้ตรวจเกินกี่วันถือว่า "เลยรอบตรวจ"
 const LOW_PRESSURE_THRESHOLD = 70;      // แรงดัน (%) ต่ำกว่านี้ = แรงดันต่ำ
-const ADMIN_EMAIL = '366329241020-st@rmutsb.ac.th'; // <-- เปลี่ยนเป็นอีเมลผู้รับแจ้งเตือน
+const ADMIN_EMAIL = 'safety-admin@example.com'; // <-- เปลี่ยนเป็นอีเมลผู้รับแจ้งเตือน
 
 const SESSION_TTL_SEC = 21600;          // 6 ชม. (เพดานของ CacheService) ต่ออายุทุกครั้งที่ใช้งาน
 const HASH_ROUNDS = 500;                // จำนวนรอบ hash รหัสผ่าน (ปรับได้)
@@ -30,6 +30,7 @@ const LOGIN_LOCK_SEC = 900;             // ล็อก 15 นาที
 const MAX_REGISTER_PER_HOUR = 20;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_PHOTOS = 10;
+const DEBUG_ERRORS = false;            // true = ส่งข้อความ error จริงกลับไปแสดงที่หน้าเว็บ (ใช้ตอนไล่ปัญหาเท่านั้น แล้วตั้งกลับเป็น false)
 
 const RESULT_PASS = 'ผ่าน';
 const RESULT_FAIL = 'ไม่ผ่าน';
@@ -127,12 +128,15 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  let action = '';
   try {
     const body = JSON.parse(e.postData.contents);
-    return jsonResponse(handle(String(body.action || ''), body.payload || {}, body.token));
+    action = String(body.action || '');
+    return jsonResponse(handle(action, body.payload || {}, body.token));
   } catch (err) {
-    if (!err.code) console.error(err);
-    return jsonResponse({ error: err.code ? err.message : 'เกิดข้อผิดพลาดภายในระบบ', code: err.code || 'INTERNAL' });
+    if (!err.code) console.error('[' + action + '] ' + (err.stack || err)); // ดูได้ที่ Apps Script > Executions
+    const generic = DEBUG_ERRORS ? 'ข้อผิดพลาดภายใน [' + action + ']: ' + err.message : 'เกิดข้อผิดพลาดภายในระบบ';
+    return jsonResponse({ error: err.code ? err.message : generic, code: err.code || 'INTERNAL' });
   }
 }
 
@@ -313,7 +317,7 @@ function setUserActive(s, p) {
 
 /** รันเองใน Apps Script Editor เพื่อสร้างแอดมินคนแรก — แก้ค่าด้านล่าง กด Run แล้วลบรหัสผ่านออกจากโค้ด */
 function bootstrapAdmin() {
-  const USERNAME = 'admin', PASSWORD = '123456', FULLNAME = 'ผู้ดูแลระบบ', EMAIL = '';
+  const USERNAME = 'admin', PASSWORD = '12345678', FULLNAME = 'ผู้ดูแลระบบ', EMAIL = '';
   if (PASSWORD === 'ตั้งรหัสผ่านที่นี่') throw new Error('แก้ PASSWORD ในฟังก์ชันนี้ก่อนรัน และลบออกหลังรันเสร็จ');
   createUser(USERNAME, PASSWORD, 'admin', FULLNAME, EMAIL);
 }
@@ -433,7 +437,7 @@ function submitInspection(s, p) {
 
   // อัปโหลดรูปก่อน (ช้า) แล้วค่อยล็อกเฉพาะช่วงเขียนชีต
   const folder = getOrCreatePhotoFolder();
-  const stamp = ext.code.replace(/[^\w-]/g, '_') + '_' + Date.now();
+  const stamp = String(ext.code).replace(/[^\w-]/g, '_') + '_' + Date.now(); // code อาจเป็นตัวเลขถ้าชีตเก็บเป็น number
   const photoUrls = (Array.isArray(p.photosBase64) ? p.photosBase64 : []).slice(0, MAX_PHOTOS)
     .map((ph, i) => saveBase64Image(folder, ph && ph.data, 'photo_' + stamp + '_' + i));
   const sigUrl = p.signatureBase64 ? saveBase64Image(folder, p.signatureBase64, 'signature_' + stamp) : '';
