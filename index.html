@@ -642,7 +642,7 @@ a{text-decoration:none;}
 /* ---------------- API CONFIG ---------------- */
 // วาง Web App URL ที่ได้จากขั้นตอน Deploy ใน Code.gs / README ข้อ 2.4 ลงตรงนี้
 // รูปแบบ: https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec
-const API_URL = 'https://script.google.com/macros/s/AKfycbzdEAS93OzB3oL7-tdzrmihny4kyTr8xlATdLb6k8NAv-4DaVHVza8boVugyIri8i_o/exec'; // <-- วาง Web App URL (deployment ใหม่) ที่นี่ ถ้าปล่อยว่างระบบจะใช้ข้อมูลจำลอง (Demo Mode)
+const API_URL = 'https://script.google.com/macros/s/AKfycbyIfIcb37ytZI0QSQKPc26B2CPoAgtoWeEdr--aOH9HpeEkCpY5oBoZfF83JzE8oHGy/exec'; // <-- วาง Web App URL (deployment ใหม่) ที่นี่ ถ้าปล่อยว่างระบบจะใช้ข้อมูลจำลอง (Demo Mode)
 const DEMO_MODE = !API_URL;
 
 /* ทุกคำขอเป็น POST (text/plain) พร้อม token ของผู้ที่ login — backend ไม่เปิดอ่านข้อมูลผ่าน GET
@@ -877,7 +877,8 @@ async function loadInitialData(){
   try{
     const [exts, insps] = await Promise.all([apiGet('listExtinguishers'), apiGet('listInspections')]);
     const OVERRIDE_STATUSES = ['need_repair','low_pressure','damaged'];
-    extinguishers = (exts||[]).map(e=>({...e, forceStatus: OVERRIDE_STATUSES.includes(e.status) ? e.status : ''}));
+    const TXT = ['code','serial','type','size','building','floor','room','company','owner'];
+    extinguishers = (exts||[]).map(e=>({...e, ...Object.fromEntries(TXT.map(k=>[k, String(e[k] ?? '')])), forceStatus: OVERRIDE_STATUSES.includes(e.status) ? e.status : ''}));
     inspections = (insps||[]).map(i=>{
       let checklist = {};
       try{ checklist = typeof i.checklistJSON==='string' ? JSON.parse(i.checklistJSON||'{}') : (i.checklist||{}); }catch(_){ checklist = {}; }
