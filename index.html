@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>FireCheck — ระบบตรวจเช็คถังดับเพลิง</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.5/sweetalert2.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/4.1.5/signature_pad.umd.min.js"></script>
+
+<style>
+:root{
+  --red-900:#7A0000;
+  --red-700:#A81F1F;
+  --red-600:#C62828;
+  --red-100:#FBE4E4;
+  --red-50:#FDF4F4;
+  --ink-900:#20211F;
+  --ink-700:#4A4C48;
+  --ink-500:#787A75;
+  --ink-300:#C9CBC6;
+  --ink-100:#EEEFEC;
+  --paper:#FBFBF9;
+  --white:#FFFFFF;
+  --ok:#2E7D32;
+  --ok-bg:#E7F3E8;
+  --warn:#B9740A;
+  --warn-bg:#FBF0DC;
+  --bad:#A81F1F;
+  --bad-bg:#FBE4E4;
+  --grey:#6B6D68;
+  --grey-bg:#EEEFEC;
+  --radius-sm:6px;
+  --radius:12px;
+  --radius-lg:20px;
+  --shadow-sm:0 1px 2px rgba(32,33,31,.06), 0 1px 1px rgba(32,33,31,.04);
+  --shadow:0 6px 20px rgba(32,33,31,.08);
+  --shadow-lg:0 16px 40px rgba(32,33,31,.14);
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'Sarabun',sans-serif;
+  background:var(--paper);
+  color:var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,h5,.display-font{font-family:'Kanit',sans-serif;}
+a{text-decoration:none;}
+::selection{background:var(--red-100);}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-thumb{background:var(--ink-300);border-radius:10px;}
+
+/* ============ LOGIN ============ */
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(198,40,40,.10), transparent 42%),
+    radial-gradient(circle at 88% 82%, rgba(198,40,40,.08), transparent 45%),
+    var(--ink-900);
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+}
+.hazard-strip{
+  position:absolute; left:0; right:0; height:14px;
+  background:repeating-linear-gradient(135deg,var(--red-600) 0 18px,#1a1b19 18px 36px);
+  opacity:.9;
+}
+.hazard-strip.top{top:0;} .hazard-strip.bottom{bottom:0;}
+.login-card{
+  width:100%;max-width:920px;background:var(--white);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); display:grid;grid-template-columns:1.05fr 1fr;overflow:hidden;position:relative;z-index:2;
+}
+.login-brand{
+  background:linear-gradient(160deg,var(--red-700),var(--red-900));
+  color:#fff;padding:48px 40px;display:flex;flex-direction:column;justify-content:space-between;position:relative;
+}
+.login-brand .tag-hole{
+  position:absolute; top:28px; right:28px; width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.12); border:2px solid rgba(255,255,255,.35);
+}
+.brand-mark{display:flex;align-items:center;gap:12px;}
+.brand-mark .icon{
+  width:46px;height:46px;border-radius:10px;background:rgba(255,255,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+}
+.brand-title{font-family:'Kanit',sans-serif;font-weight:700;font-size:22px;letter-spacing:.3px;}
+.brand-sub{font-size:12.5px;opacity:.75;letter-spacing:2px;text-transform:uppercase;}
+.login-pitch h2{font-size:28px;font-weight:700;line-height:1.3;margin-bottom:10px;}
+.login-pitch p{opacity:.82;font-size:14.5px;line-height:1.7;}
+.login-meta{font-size:12px;opacity:.6;}
+.login-form-side{padding:48px 40px;display:flex;flex-direction:column;justify-content:center;}
+.login-form-side h3{font-weight:700;font-size:22px;margin-bottom:4px;}
+.login-form-side .sub{color:var(--ink-500);font-size:13.5px;margin-bottom:26px;}
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.role-btn{
+  border:1.5px solid var(--ink-100);background:var(--ink-100);border-radius:var(--radius-sm);
+  padding:10px 8px;font-size:12.5px;font-weight:600;color:var(--ink-700);cursor:pointer;text-align:left;
+  transition:.15s;
+}
+.role-btn i{display:block;font-size:16px;margin-bottom:4px;color:var(--red-600);}
+.role-btn.active{border-color:var(--red-600);background:var(--red-50);color:var(--red-700);}
+.form-control,.form-select{
+  font-family:'Sarabun',sans-serif;border-radius:var(--radius-sm);border:1.5px solid var(--ink-100);
+  padding:10px 12px;font-size:14.5px;
+}
+.form-control:focus,.form-select:focus{border-color:var(--red-600);box-shadow:0 0 0 3px var(--red-100);}
+.btn{font-family:'Sarabun',sans-serif;font-weight:600;border-radius:var(--radius-sm);font-size:14.5px;}
+.btn-fire{background:var(--red-600);border-color:var(--red-600);color:#fff;}
+.btn-fire:hover{background:var(--red-700);border-color:var(--red-700);color:#fff;}
+.btn-outline-fire{border:1.5px solid var(--red-600);color:var(--red-600);background:#fff;}
+.btn-outline-fire:hover{background:var(--red-50);color:var(--red-700);}
+.demo-creds{font-size:11.5px;color:var(--ink-500);background:var(--ink-100);border-radius:var(--radius-sm);padding:10px 12px;margin-top:16px;line-height:1.6;}
+.demo-creds b{color:var(--ink-900);}
+
+/* ============ APP SHELL ============ */
+#mainApp{display:none;min-height:100vh;}
+.app-shell{display:flex;min-height:100vh;}
+.sidebar{
+  width:246px;flex:none;background:var(--ink-900);color:#fff;display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar-brand{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sidebar-brand .icon{width:36px;height:36px;border-radius:9px;background:var(--red-600);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.sidebar-brand .name{font-family:'Kanit',sans-serif;font-weight:700;font-size:16.5px;}
+.sidebar-brand .sub{font-size:10px;letter-spacing:1.5px;opacity:.55;text-transform:uppercase;}
+.nav-group-label{font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;opacity:.4;padding:16px 20px 6px;}
+.nav-link-app{
+  display:flex;align-items:center;gap:12px;padding:10px 20px;color:rgba(255,255,255,.72);font-size:14px;font-weight:500;cursor:pointer;
+  border-left:3px solid transparent;transition:.12s;
+}
+.nav-link-app i{font-size:16px;width:18px;text-align:center;}
+.nav-link-app:hover{background:rgba(255,255,255,.05);color:#fff;}
+.nav-link-app.active{background:rgba(198,40,40,.18);border-left-color:var(--red-600);color:#fff;}
+.nav-badge{margin-left:auto;background:var(--red-600);color:#fff;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:20px;}
+.sidebar-footer{margin-top:auto;padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;}
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  height:64px;flex:none;background:#fff;border-bottom:1px solid var(--ink-100);display:flex;align-items:center;
+  padding:0 22px;gap:14px;position:sticky;top:0;z-index:20;
+}
+.topbar h1{font-size:18px;margin:0;font-weight:700;}
+.topbar .path{font-size:12px;color:var(--ink-500);}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--ink-100);background:#fff;display:flex;
+  align-items:center;justify-content:center;cursor:pointer;position:relative;color:var(--ink-700);
+}
+.icon-btn:hover{background:var(--ink-100);}
+.dot-badge{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--red-600);border:1.5px solid #fff;}
+.content-area{padding:22px;flex:1;}
+.view{display:none;}
+.view.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* cards */
+.stat-card{
+  background:#fff;border-radius:var(--radius);padding:18px 18px 16px;box-shadow:var(--shadow-sm);border:1px solid var(--ink-100);
+  position:relative;overflow:hidden;
+}
+.stat-card .tophole{position:absolute;top:-10px;right:16px;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink-100);}
+.stat-card .lbl{font-size:12.5px;color:var(--ink-500);font-weight:600;}
+.stat-card .val{font-family:'Kanit',sans-serif;font-size:30px;font-weight:700;margin-top:2px;}
+.stat-card .delta{font-size:11.5px;font-weight:600;}
+.stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+
+.panel{background:#fff;border-radius:var(--radius);border:1px solid var(--ink-100);box-shadow:var(--shadow-sm);}
+.panel-head{padding:16px 18px;border-bottom:1px solid var(--ink-100);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.panel-head h3{font-size:15.5px;font-weight:700;margin:0;}
+.panel-body{padding:18px;}
+
+.badge-status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+.badge-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.st-normal{background:var(--ok-bg);color:var(--ok);}
+.st-near_expiry{background:var(--warn-bg);color:var(--warn);}
+.st-low_pressure{background:#FDEBD8;color:#C05B00;}
+.st-need_repair{background:var(--bad-bg);color:var(--bad);}
+.st-expired{background:#F3D9D9;color:#5E0000;}
+.st-damaged{background:var(--grey-bg);color:var(--grey);}
+.st-not_inspected{background:var(--grey-bg);color:var(--grey);}
+
+/* extinguisher tag card */
+.tag-card{
+  background:#fff;border-radius:var(--radius);border:1px solid var(--ink-100);box-shadow:var(--shadow-sm);
+  padding:16px;position:relative;transition:.15s;cursor:pointer;
+}
+.tag-card:hover{box-shadow:var(--shadow);transform:translateY(-1px);}
+.tag-card .punch{position:absolute;top:12px;right:12px;width:16px;height:16px;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink-200,var(--ink-100));}
+.tag-card .code{font-family:'Kanit',sans-serif;font-weight:700;font-size:15px;}
+.tag-card .loc{font-size:12.5px;color:var(--ink-500);margin-top:1px;}
+.tag-card .row-mini{display:flex;justify-content:space-between;font-size:12px;margin-top:10px;color:var(--ink-700);}
+.tag-swatch{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--red-50);color:var(--red-600);font-size:19px;margin-bottom:8px;}
+
+/* table */
+.table-app{font-size:13.5px;}
+.table-app thead th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-500);font-weight:700;border-bottom:2px solid var(--ink-100);white-space:nowrap;}
+.table-app tbody td{vertical-align:middle;border-bottom:1px solid var(--ink-100);}
+.table-app tbody tr:hover{background:var(--red-50);}
+.link-btn{background:none;border:none;color:var(--red-600);font-weight:600;font-size:13px;cursor:pointer;padding:0;}
+
+/* checklist */
+.check-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;
+  border:1px solid var(--ink-100);border-radius:var(--radius-sm);margin-bottom:8px;background:#fff;
+}
+.check-item .lbl{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.chk-group{display:flex;gap:6px;}
+.chk-opt{
+  border:1.5px solid var(--ink-100);background:#fff;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-500);
+}
+.chk-opt.ok.sel{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);}
+.chk-opt.bad.sel{background:var(--bad-bg);border-color:var(--bad);color:var(--bad);}
+
+.photo-thumb{width:84px;height:84px;border-radius:9px;object-fit:cover;border:1px solid var(--ink-100);}
+.photo-slot{position:relative;}
+.photo-slot .rm{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red-600);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;}
+.photo-slot .tag{position:absolute;bottom:2px;left:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;font-size:8.5px;text-align:center;border-radius:4px;padding:1px 2px;}
+
+#sigPad{border:1.5px dashed var(--ink-300);border-radius:var(--radius-sm);width:100%;height:150px;touch-action:none;background:#fff;}
+
+.qr-video-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:#000;aspect-ratio:4/3;max-width:420px;margin:0 auto;}
+.qr-video-wrap video{width:100%;height:100%;object-fit:cover;}
+.scan-frame{position:absolute;inset:15%;border:3px solid var(--red-600);border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.35);}
+
+.step-pill{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-500);}
+.step-pill .n{width:22px;height:22px;border-radius:50%;background:var(--ink-100);display:flex;align-items:center;justify-content:center;font-size:11px;}
+.step-pill.active .n{background:var(--red-600);color:#fff;}
+.step-pill.active{color:var(--ink-900);}
+
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;}
+.filter-bar select,.filter-bar input{width:auto;min-width:130px;}
+
+.timeline{border-left:2px solid var(--ink-100);margin-left:8px;padding-left:20px;}
+.timeline-item{position:relative;padding-bottom:22px;}
+.timeline-item::before{content:'';position:absolute;left:-26px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--red-600);border:2px solid #fff;box-shadow:0 0 0 2px var(--ink-100);}
+.timeline-item .date{font-size:12px;color:var(--ink-500);font-weight:600;}
+.timeline-item .card-mini{background:#fff;border:1px solid var(--ink-100);border-radius:var(--radius-sm);padding:12px 14px;margin-top:6px;}
+
+@media(max-width:991px){
+  .login-card{grid-template-columns:1fr;}
+  .login-brand{display:none;}
+  .sidebar{position:fixed;left:-260px;z-index:1000;transition:.2s;box-shadow:var(--shadow-lg);}
+  .sidebar.open{left:0;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;}
+  .sidebar-overlay.show{display:block;}
+}
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff;}
+  #mainApp{display:block !important;}
+  .sidebar,.topbar{display:none !important;}
+  .content-area{padding:0;}
+}
+.empty-state{text-align:center;padding:50px 20px;color:var(--ink-500);}
+.empty-state i{font-size:40px;color:var(--ink-300);margin-bottom:10px;display:block;}
+.kbd-hint{font-size:11px;color:var(--ink-500);}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.bi-spin{animation:spin .6s linear;}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ LOGIN ============================================================ -->
+<div id="loginScreen">
+  <div class="hazard-strip top"></div>
+  <div class="login-card">
+    <div class="login-brand">
+      <div>
+        <div class="tag-hole"></div>
+        <div class="brand-mark">
+          <div class="icon"><i class="bi bi-fire"></i></div>
+          <div>
+            <div class="brand-title">FireCheck</div>
+            <div class="brand-sub">Extinguisher Inspection System</div>
+          </div>
+        </div>
+      </div>
+      <div class="login-pitch">
+        <h2>ตรวจเช็คถังดับเพลิงให้ครบ<br>ทุกจุด ทุกครั้ง</h2>
+        <p>บันทึกผลตรวจ ถ่ายรูป ระบุพิกัด GPS เซ็นชื่อรับรอง และออกรายงานอัตโนมัติ — ใช้งานได้ทั้งบนมือถือหน้างานและคอมพิวเตอร์สำนักงาน</p>
+      </div>
+      <div class="login-meta">Demo Environment · ข้อมูลจำลองในเบราว์เซอร์ · ไม่เชื่อมต่อฐานข้อมูลจริง</div>
+    </div>
+    <div class="login-form-side">
+      <h3>เข้าสู่ระบบ</h3>
+      <div class="sub">เลือกบทบาทตัวอย่างเพื่อทดลองใช้งาน หรือกรอกด้วยตนเอง</div>
+
+      <div class="role-pick" id="rolePick">
+        <div class="role-btn active" data-role="admin" data-user="admin" data-pass="admin123"><i class="bi bi-shield-lock"></i>ผู้ดูแลระบบ (Admin)</div>
+        <div class="role-btn" data-role="inspector" data-user="inspector" data-pass="insp123"><i class="bi bi-clipboard-check"></i>ผู้ตรวจสอบ</div>
+        <div class="role-btn" data-role="supervisor" data-user="supervisor" data-pass="sup123"><i class="bi bi-person-badge"></i>หัวหน้างาน</div>
+        <div class="role-btn" data-role="exec" data-user="exec" data-pass="exec123"><i class="bi bi-graph-up"></i>ผู้บริหาร</div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">ชื่อผู้ใช้</label>
+        <input type="text" class="form-control" id="loginUser" value="admin">
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">รหัสผ่าน</label>
+        <input type="password" class="form-control" id="loginPass" value="admin123">
+      </div>
+      <button class="btn btn-fire w-100 py-2" onclick="doLogin()"><i class="bi bi-box-arrow-in-right me-1"></i> เข้าสู่ระบบ</button>
+      <div class="demo-creds" id="demoCredsBanner">
+        <b>บัญชีทดลอง:</b> admin/admin123 · inspector/insp123 · supervisor/sup123 · exec/exec123
+      </div>
+      <div class="text-center mt-3" id="goRegisterWrap" style="display:none;">
+        <a href="#" class="small" onclick="showRegisterForm(); return false;">ยังไม่มีบัญชี? สมัครสมาชิก</a>
+      </div>
+    </div>
+
+    <!-- ฟอร์มสมัครสมาชิก (self sign-up) — ใช้ได้เมื่อเชื่อมต่อ Backend จริงเท่านั้น -->
+    <div class="login-form-side" id="registerFormSide" style="display:none;">
+      <h3>สมัครสมาชิก</h3>
+      <div class="sub">บัญชีใหม่จะได้สิทธิ์ <b>ผู้ตรวจสอบ (Inspector)</b> โดยอัตโนมัติ — หากต้องการสิทธิ์อื่น ให้ติดต่อผู้ดูแลระบบเพื่อเลื่อนสิทธิ์ภายหลัง</div>
+
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">ชื่อ-นามสกุล</label>
+        <input type="text" class="form-control" id="regFullName" placeholder="เช่น สมชาย ใจดี">
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">ชื่อผู้ใช้</label>
+        <input type="text" class="form-control" id="regUsername" placeholder="ตัวอักษร/ตัวเลข 3-30 ตัว">
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">อีเมล (ไม่บังคับ)</label>
+        <input type="email" class="form-control" id="regEmail" placeholder="you@example.com">
+      </div>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold">รหัสผ่าน</label>
+        <input type="password" class="form-control" id="regPassword" placeholder="อย่างน้อย 8 ตัวอักษร">
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">ยืนยันรหัสผ่าน</label>
+        <input type="password" class="form-control" id="regPassword2" placeholder="กรอกรหัสผ่านอีกครั้ง">
+      </div>
+      <button class="btn btn-fire w-100 py-2" onclick="doRegister()"><i class="bi bi-person-plus me-1"></i> สมัครสมาชิก</button>
+      <div class="text-center mt-3">
+        <a href="#" class="small" onclick="showLoginForm(); return false;">มีบัญชีอยู่แล้ว? เข้าสู่ระบบ</a>
+      </div>
+    </div>
+  </div>
+  <div class="hazard-strip bottom"></div>
+</div>
+
+<!-- ============================================================ MAIN APP ============================================================ -->
+<div id="mainApp">
+  <div class="app-shell">
+    <div class="sidebar-overlay no-print" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+    <aside class="sidebar no-print" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="icon"><i class="bi bi-fire"></i></div>
+        <div>
+          <div class="name">FireCheck</div>
+          <div class="sub">Inspection System</div>
+        </div>
+      </div>
+      <div>
+        <div class="nav-group-label">เมนูหลัก</div>
+        <div class="nav-link-app active" data-view="dashboard"><i class="bi bi-grid-1x2"></i> Dashboard</div>
+        <div class="nav-link-app" data-view="list"><i class="bi bi-list-check"></i> รายการถังดับเพลิง</div>
+        <div class="nav-link-app" data-view="scan"><i class="bi bi-qr-code-scan"></i> สแกน QR ตรวจเช็ค</div>
+        <div class="nav-link-app" data-view="history"><i class="bi bi-clock-history"></i> ประวัติการตรวจ</div>
+        <div class="nav-link-app" data-view="reports"><i class="bi bi-file-earmark-bar-graph"></i> รายงาน</div>
+        <div class="nav-group-label">ระบบ</div>
+        <div class="nav-link-app" data-view="admin" id="navAdmin"><i class="bi bi-gear"></i> จัดการระบบ (Admin)</div>
+        <div class="nav-link-app" data-view="notifications"><i class="bi bi-bell"></i> การแจ้งเตือน <span class="nav-badge" id="notifCount">0</span></div>
+      </div>
+      <div class="sidebar-footer">
+        <div style="opacity:.85" id="sideUserName">—</div>
+        <div class="d-flex align-items-center gap-2" style="margin-top:2px">
+          <span class="badge-status st-normal" id="sideUserRole" style="font-size:10px">—</span>
+        </div>
+        <div style="opacity:.45;font-size:10.5px;margin-top:6px" id="sideModeLabel">—</div>
+        <a href="#" style="color:#ffb3b3;font-size:12.5px;display:inline-block;margin-top:8px" onclick="doLogout();return false;"><i class="bi bi-box-arrow-left"></i> ออกจากระบบ</a>
+      </div>
+    </aside>
+
+    <div class="main-col">
+      <div class="topbar no-print">
+        <button class="icon-btn d-lg-none" onclick="toggleSidebar(true)"><i class="bi bi-list"></i></button>
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <div class="path" id="pagePath">ภาพรวมระบบ</div>
+        </div>
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <button class="icon-btn" id="btnRefreshData" onclick="manualRefresh()" title="ซิงค์ข้อมูลล่าสุดจากผู้ใช้งานคนอื่น">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <button class="icon-btn" onclick="switchView('notifications')" title="การแจ้งเตือน">
+            <i class="bi bi-bell"></i>
+            <span class="dot-badge" id="bellDot" style="display:none"></span>
+          </button>
+          <button class="icon-btn" id="themeToggle" title="สลับธีมสี"><i class="bi bi-moon-stars"></i></button>
+        </div>
+      </div>
+
+      <div class="content-area">
+
+        <!-- ============ DASHBOARD ============ -->
+        <section class="view active" id="view-dashboard">
+          <div class="row g-3 mb-3" id="statCards"></div>
+          <div class="row g-3 mb-3">
+            <div class="col-lg-5">
+              <div class="panel h-100">
+                <div class="panel-head"><h3>สัดส่วนสถานะถังดับเพลิง</h3></div>
+                <div class="panel-body"><canvas id="chartStatus" height="230"></canvas></div>
+              </div>
+            </div>
+            <div class="col-lg-7">
+              <div class="panel h-100">
+                <div class="panel-head"><h3>จำนวนปัญหาแยกตามอาคาร</h3></div>
+                <div class="panel-body"><canvas id="chartBuilding" height="230"></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-lg-7">
+              <div class="panel h-100">
+                <div class="panel-head"><h3>จำนวนการตรวจย้อนหลัง 6 เดือน</h3></div>
+                <div class="panel-body"><canvas id="chartMonthly" height="220"></canvas></div>
+              </div>
+            </div>
+            <div class="col-lg-5">
+              <div class="panel h-100">
+                <div class="panel-head"><h3>อาคารที่มีปัญหามากที่สุด</h3></div>
+                <div class="panel-body" id="topProblemBuildings"></div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>รายการที่ต้องดำเนินการด่วน</h3>
+              <button class="btn btn-sm btn-outline-fire" onclick="switchView('list')">ดูทั้งหมด</button>
+            </div>
+            <div class="table-responsive"><table class="table table-app mb-0" id="urgentTable"></table></div>
+          </div>
+        </section>
+
+        <!-- ============ LIST / MANAGE ============ -->
+        <section class="view" id="view-list">
+          <div class="panel mb-3">
+            <div class="panel-body">
+              <div class="filter-bar align-items-center">
+                <input type="text" class="form-control" id="fSearch" placeholder="ค้นหา รหัส / Serial / ห้อง / ผู้รับผิดชอบ" style="min-width:230px">
+                <select class="form-select" id="fBuilding"><option value="">ทุกอาคาร</option></select>
+                <select class="form-select" id="fType"><option value="">ทุกประเภท</option></select>
+                <select class="form-select" id="fStatus"><option value="">ทุกสถานะ</option></select>
+                <button class="btn btn-outline-fire" onclick="renderListView()"><i class="bi bi-funnel"></i> กรอง</button>
+                <button class="btn btn-outline-fire" onclick="clearFilters()">ล้างตัวกรอง</button>
+                <div class="ms-auto d-flex gap-2">
+                  <button class="btn btn-outline-fire" onclick="exportCSV()"><i class="bi bi-download"></i> Export CSV</button>
+                  <button class="btn btn-fire" id="btnAddExt" onclick="openExtModal()"><i class="bi bi-plus-lg"></i> เพิ่มถังดับเพลิง</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3" id="extGrid"></div>
+        </section>
+
+        <!-- ============ SCAN QR ============ -->
+        <section class="view" id="view-scan">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="panel">
+                <div class="panel-head"><h3>สแกน QR Code ถังดับเพลิง</h3></div>
+                <div class="panel-body text-center">
+                  <div class="qr-video-wrap mb-3" id="qrWrap">
+                    <video id="qrVideo" playsinline muted></video>
+                    <div class="scan-frame" id="scanFrame" style="display:none"></div>
+                  </div>
+                  <canvas id="qrCanvas" style="display:none"></canvas>
+                  <div id="scanStatus" class="text-muted small mb-3">กดเริ่มสแกนเพื่อเปิดกล้อง</div>
+                  <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <button class="btn btn-fire" id="btnStartScan" onclick="startScan()"><i class="bi bi-camera"></i> เริ่มสแกน</button>
+                    <button class="btn btn-outline-fire" id="btnStopScan" onclick="stopScan()" style="display:none">หยุดสแกน</button>
+                  </div>
+                  <hr>
+                  <div class="text-start">
+                    <label class="form-label small fw-semibold">หรือค้นหาด้วยรหัสถัง</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="manualScanInput" placeholder="เช่น FE-A-101-01">
+                      <button class="btn btn-fire" onclick="manualScan()">ไปหน้าตรวจเช็ค</button>
+                    </div>
+                    <div class="form-text">กล้องอาจถูกจำกัดสิทธิ์ในสภาพแวดล้อมสาธิตนี้ — ใช้ช่องค้นหานี้แทนได้ หรือเลือกจากรายการด้านล่าง</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="panel h-100">
+                <div class="panel-head"><h3>เลือกจากรายการ (จำลองการสแกน)</h3></div>
+                <div class="panel-body" style="max-height:520px;overflow:auto" id="scanPickList"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HISTORY ============ -->
+        <section class="view" id="view-history">
+          <div class="panel mb-3">
+            <div class="panel-body">
+              <div class="filter-bar">
+                <select class="form-select" id="hExtSelect"><option value="">— เลือกถังดับเพลิงเพื่อดูประวัติ —</option></select>
+                <select class="form-select" id="hBuilding"><option value="">ทุกอาคาร</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Timeline การตรวจเช็ค</h3></div>
+            <div class="panel-body" id="historyTimeline"></div>
+          </div>
+        </section>
+
+        <!-- ============ REPORTS ============ -->
+        <section class="view" id="view-reports">
+          <div class="panel mb-3 no-print">
+            <div class="panel-body">
+              <div class="filter-bar">
+                <select class="form-select" id="rBuilding"><option value="">ทุกอาคาร</option></select>
+                <input type="date" class="form-control" id="rFrom">
+                <input type="date" class="form-control" id="rTo">
+                <select class="form-select" id="rInspector"><option value="">ผู้ตรวจทั้งหมด</option></select>
+                <button class="btn btn-outline-fire" onclick="renderReport()"><i class="bi bi-funnel"></i> กรอง</button>
+                <span id="reportExportBtns" class="d-flex gap-2">
+                  <button class="btn btn-outline-fire" onclick="exportReportCSV()"><i class="bi bi-download"></i> Export CSV</button>
+                  <button class="btn btn-fire" onclick="window.print()"><i class="bi bi-printer"></i> พิมพ์ / PDF</button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="panel mb-3">
+            <div class="panel-body">
+              <h2 class="display-font mb-0" style="font-size:20px">รายงานผลการตรวจเช็คถังดับเพลิง</h2>
+              <div class="text-muted small" id="reportRange">—</div>
+            </div>
+          </div>
+          <div class="row g-3 mb-3" id="reportStats"></div>
+          <div class="panel">
+            <div class="panel-head"><h3>รายละเอียดผลการตรวจ</h3></div>
+            <div class="table-responsive"><table class="table table-app mb-0" id="reportTable"></table></div>
+          </div>
+        </section>
+
+        <!-- ============ ADMIN ============ -->
+        <section class="view" id="view-admin">
+          <ul class="nav nav-pills mb-3 no-print" id="adminTabs">
+            <li class="nav-item"><a class="nav-link active" data-tab="users" href="#">ผู้ใช้งาน</a></li>
+            <li class="nav-item"><a class="nav-link" data-tab="importexport" href="#">Import / Export</a></li>
+            <li class="nav-item"><a class="nav-link" data-tab="log" href="#">Log การใช้งาน</a></li>
+            <li class="nav-item"><a class="nav-link" data-tab="settings" href="#">การแจ้งเตือน</a></li>
+          </ul>
+          <div id="adminTabContent"></div>
+        </section>
+
+        <!-- ============ NOTIFICATIONS ============ -->
+        <section class="view" id="view-notifications">
+          <div class="panel">
+            <div class="panel-head"><h3>รายการแจ้งเตือนทั้งหมด</h3></div>
+            <div class="panel-body" id="notifList"></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXTINGUISHER MODAL ============ -->
+<div class="modal fade" id="extModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="extModalTitle">เพิ่มถังดับเพลิง</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="extId">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label small fw-semibold">รหัสถัง</label><input class="form-control" id="extCode"></div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">Serial Number</label><input class="form-control" id="extSerial"></div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">ประเภทถัง</label>
+            <select class="form-select" id="extType"><option>CO2</option><option>Dry Chemical</option><option>Foam</option><option>Water</option><option>Clean Agent</option></select>
+          </div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">ขนาด (กก./ปอนด์)</label><input class="form-control" id="extSize" placeholder="เช่น 15 lbs"></div>
+          <div class="col-md-4"><label class="form-label small fw-semibold">อาคาร</label><input class="form-control" id="extBuilding"></div>
+          <div class="col-md-4"><label class="form-label small fw-semibold">ชั้น</label><input class="form-control" id="extFloor"></div>
+          <div class="col-md-4"><label class="form-label small fw-semibold">ห้อง / จุดติดตั้ง</label><input class="form-control" id="extRoom"></div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">วันที่ติดตั้ง</label><input type="date" class="form-control" id="extInstall"></div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">วันหมดอายุ</label><input type="date" class="form-control" id="extExpire"></div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">บริษัทผู้ติดตั้ง</label><input class="form-control" id="extCompany"></div>
+          <div class="col-md-6"><label class="form-label small fw-semibold">ผู้รับผิดชอบ</label><input class="form-control" id="extOwner"></div>
+          <div class="col-md-4"><label class="form-label small fw-semibold">ละติจูด</label><input class="form-control" id="extLat" inputmode="decimal" placeholder="เช่น 14.353200"></div>
+          <div class="col-md-4"><label class="form-label small fw-semibold">ลองจิจูด</label><input class="form-control" id="extLng" inputmode="decimal" placeholder="เช่น 100.568900"></div>
+          <div class="col-md-4 d-flex align-items-end"><button type="button" class="btn btn-outline-fire w-100" onclick="fillExtGPS()"><i class="bi bi-geo-alt"></i> ใช้ตำแหน่งปัจจุบัน</button></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-fire" data-bs-dismiss="modal">ยกเลิก</button>
+        <button class="btn btn-fire" onclick="saveExt()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ QR / DETAIL MODAL ============ -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" id="detailModalContent"></div>
+  </div>
+</div>
+
+<!-- ============ INSPECTION POPUP ============ -->
+<div class="modal fade" id="inspectModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-clipboard-check me-1"></i> แบบฟอร์มตรวจเช็คถังดับเพลิง</h5>
+        <button class="btn-close" data-bs-dismiss="modal" onclick="closeInspectModal()"></button>
+      </div>
+      <div class="modal-body" id="inspectContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================================================================================
+   FireCheck — Fire Extinguisher Inspection System
+   เชื่อมต่อกับ Google Apps Script backend จริงผ่าน API_URL ด้านล่าง
+   ถ้ายังไม่ได้ตั้งค่า API_URL (ยังเป็นค่าว่าง) ระบบจะสลับไปใช้ข้อมูลจำลอง (Demo Mode) แทน
+=================================================================================== */
+
+/* ---------------- API CONFIG ---------------- */
+// วาง Web App URL ที่ได้จากขั้นตอน Deploy ใน Code.gs / README ข้อ 2.4 ลงตรงนี้
+// รูปแบบ: https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec
+const API_URL = 'https://script.google.com/macros/s/AKfycby4DOfi07K3VuRtmPluH_oZZEW6cXNn_VirZuS6m21iFPuSbaDWsbXBIlX_NPi-rrA3/exec'; // <-- วาง Web App URL (deployment ใหม่) ที่นี่ ถ้าปล่อยว่างระบบจะใช้ข้อมูลจำลอง (Demo Mode)
+const DEMO_MODE = !API_URL;
+
+/* ทุกคำขอเป็น POST (text/plain) พร้อม token ของผู้ที่ login — backend ไม่เปิดอ่านข้อมูลผ่าน GET
+   token เก็บในหน่วยความจำเท่านั้น (รีเฟรชหน้า = ต้อง login ใหม่) */
+let authToken = null;
+let sessionExpiredShown = false;
+async function apiCall(action, payload){
+  const body = {action, payload: payload||{}};
+  if(authToken) body.token = authToken;
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(body),
+  });
+  if(!res.ok) throw new Error('เครือข่ายผิดพลาด: '+res.status);
+  const data = await res.json();
+  if(data && data.error){
+    if(data.code === 'UNAUTHENTICATED'){
+      handleSessionExpired();
+      const e = new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'); e.silent = true; throw e;
+    }
+    throw new Error(data.error);
+  }
+  return data;
+}
+function apiGet(action, params){ return apiCall(action, params); }
+function apiPost(action, payload){ return apiCall(action, payload); }
+function handleSessionExpired(){
+  if(!currentUser || sessionExpiredShown) return;
+  sessionExpiredShown = true;
+  doLogout();
+  Swal.fire({icon:'info', title:'เซสชันหมดอายุ', text:'กรุณาเข้าสู่ระบบใหม่', confirmButtonColor:'#C62828'}).then(()=>{ sessionExpiredShown = false; });
+}
+
+/** แปลงไฟล์รูป (จาก dataUrl ที่มีอยู่แล้วในหน่วยความจำ) ให้อยู่ในรูปแบบที่ Code.gs คาดหวัง: {data, filename} */
+function toPhotoPayload(photos){
+  return (photos||[]).map((p,i)=>({data:p.dataUrl, filename:'photo_'+Date.now()+'_'+i, tag:p.tag}));
+}
+
+/* ---------------- SECURITY HELPERS ----------------
+   ข้อมูลที่มาจากผู้ใช้หรือจาก backend (Google Sheet) ต้องผ่านฟังก์ชันนี้ก่อนแสดงผลด้วย innerHTML เสมอ
+   เพื่อป้องกัน Cross-Site Scripting (XSS) — ถ้ามีใครกรอกชื่อ/หมายเหตุ/ชื่ออาคารเป็นโค้ด HTML หรือ <script>
+   ฟังก์ชันนี้จะแปลงให้กลายเป็นข้อความธรรมดา ไม่ถูกตีความเป็น HTML/JS
+*/
+function esc(str){
+  if(str===null || str===undefined) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+/** ใช้ห่อค่าที่ต้องฝังไว้ใน onclick="...('VALUE')" (เช่น id) กันไม่ให้ค่านั้นหลุดออกจาก string literal ของ JS แล้วรันโค้ดแทรกได้ */
+function escJs(str){
+  return String(str===null||str===undefined? '' : str).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+/** ตรวจสอบว่า URL ที่จะใช้เป็น href/src ปลอดภัย (กัน javascript: หรือ data:text/html ที่ใช้โจมตี XSS ผ่านลิงก์) */
+function safeUrl(url){
+  const s = String(url||'').trim();
+  if(/^(javascript|data:text\/html|vbscript):/i.test(s)) return '#';
+  return s;
+}
+
+function hasGPS(o){ const a = parseFloat(o && o.lat), b = parseFloat(o && o.lng); return isFinite(a) && isFinite(b); }
+function driveId(u){ const m = /\/d\/([\w-]+)/.exec(String(u||'')); return m ? m[1] : ''; }
+/** รูป/ลายเซ็นใน Drive เป็นไฟล์ private — โหลดผ่าน backend (ต้องมี token) แล้วค่อยแสดง */
+const driveImgCache = {};
+async function hydrateDriveImages(root){
+  if(DEMO_MODE) return;
+  const imgs = (root||document).querySelectorAll('img[data-fid]:not([src])');
+  for(const img of imgs){
+    const fid = img.dataset.fid;
+    try{
+      if(!driveImgCache[fid]) driveImgCache[fid] = apiPost('getFile', {fileId: fid}).then(r=>r.dataUrl);
+      img.src = safeUrl(await driveImgCache[fid]);
+    } catch(err){ delete driveImgCache[fid]; img.alt = 'โหลดรูปไม่สำเร็จ'; }
+  }
+}
+
+const STATUS = {
+  normal:        {label:'ปกติ',        color:'#2E7D32'},
+  near_expiry:   {label:'ใกล้หมดอายุ',  color:'#B9740A'},
+  low_pressure:  {label:'แรงดันต่ำ',    color:'#C05B00'},
+  need_repair:   {label:'ต้องซ่อม',     color:'#A81F1F'},
+  expired:       {label:'หมดอายุ',      color:'#5E0000'},
+  damaged:       {label:'ชำรุด',        color:'#6B6D68'},
+  not_inspected: {label:'ยังไม่ตรวจ',   color:'#9E9E9E'}
+};
+const TYPES = ['CO2','Dry Chemical','Foam','Water','Clean Agent'];
+const BUILDINGS = ['อาคาร A','อาคาร B','อาคาร C'];
+const CHECK_ITEMS = [
+  {key:'gauge',   label:'เข็มวัดแรงดัน'},
+  {key:'seal',    label:'ซีล (Seal)'},
+  {key:'pin',     label:'สลัก (Pin)'},
+  {key:'hose',    label:'สายฉีด'},
+  {key:'nozzle',  label:'หัวฉีด'},
+  {key:'body',    label:'ตัวถัง (สนิม / รอยบุบ)'},
+  {key:'label',   label:'ป้ายคำแนะนำการใช้งาน'},
+  {key:'expiry',  label:'วันหมดอายุ'},
+  {key:'weight',  label:'น้ำหนัก'},
+  {key:'position',label:'ตำแหน่งติดตั้ง'},
+  {key:'access',  label:'การเข้าถึง / สิ่งกีดขวาง'},
+];
+const USERS = [
+  {user:'admin',      pass:'admin123', role:'admin',      name:'สมชาย ผู้ดูแลระบบ'},
+  {user:'inspector',  pass:'insp123',  role:'inspector',  name:'สมหญิง ผู้ตรวจสอบ'},
+  {user:'supervisor', pass:'sup123',   role:'supervisor', name:'วิชัย หัวหน้างาน'},
+  {user:'exec',       pass:'exec123',  role:'exec',       name:'ปรียา ผู้บริหาร'},
+];
+const ROLE_LABEL = {admin:'ผู้ดูแลระบบ', inspector:'ผู้ตรวจสอบ', supervisor:'หัวหน้างาน', exec:'ผู้บริหาร'};
+const ROLE_BADGE_CLASS = {admin:'st-need_repair', supervisor:'st-low_pressure', inspector:'st-normal', exec:'st-not_inspected'};
+
+/* ---------------- ระบบสิทธิ์ตามบทบาท (Role-based views) ---------------- */
+// แต่ละบทบาทเห็นเมนูและทำรายการได้ไม่เท่ากัน — ปรับ matrix นี้ได้ตามต้องการ
+const PERMS = {
+  admin:      {manageExt:true,  deleteExt:true,  inspect:true,  viewScan:true,  viewAdmin:true,  exportData:true,  approve:true},
+  supervisor: {manageExt:false, deleteExt:false, inspect:true,  viewScan:true,  viewAdmin:false, exportData:true,  approve:true},
+  inspector:  {manageExt:false, deleteExt:false, inspect:true,  viewScan:true,  viewAdmin:false, exportData:false, approve:false},
+  exec:       {manageExt:false, deleteExt:false, inspect:false, viewScan:false, viewAdmin:false, exportData:true,  approve:false},
+};
+function can(action){
+  if(!currentUser) return false;
+  return !!(PERMS[currentUser.role] && PERMS[currentUser.role][action]);
+}
+/** ซ่อน/แสดงเมนูและปุ่มต่างๆ ตามสิทธิ์ของบทบาทที่ login เข้ามา เรียกครั้งเดียวหลัง login สำเร็จ */
+function applyRolePermissions(){
+  document.getElementById('navAdmin').style.display = can('viewAdmin') ? '' : 'none';
+  document.querySelector('.nav-link-app[data-view="scan"]').style.display = can('viewScan') ? '' : 'none';
+  document.getElementById('btnAddExt').style.display = can('manageExt') ? '' : 'none';
+  document.getElementById('reportExportBtns').style.display = can('exportData') ? '' : 'none';
+}
+
+let currentUser = null;
+let extinguishers = [];
+let inspections = [];
+let activityLog = [];
+let charts = {};
+let mediaStream = null, scanRAF = null;
+let sigPad = null;
+let currentPhotos = []; // {dataUrl, tag}
+let currentInspectTarget = null;
+let currentGPS = null;
+
+/* ---------------- seed data ---------------- */
+function pad(n,l){return String(n).padStart(l,'0');}
+function daysFromNow(d){const t=new Date();t.setDate(t.getDate()+d);return t;}
+function fmtDate(d){ if(!d) return '-'; const dt = (d instanceof Date)? d : new Date(d); return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function fmtDateTime(d){ const dt=(d instanceof Date)?d:new Date(d); return dt.toLocaleDateString('th-TH',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+dt.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}); }
+function isoDate(d){ return d.toISOString().slice(0,10); }
+
+function computeStatus(ext){
+  if(!ext.lastInspected) return 'not_inspected';
+  const expire = new Date(ext.expireDate);
+  const now = new Date();
+  const diffDays = (expire-now)/86400000;
+  if(ext.forceStatus) return ext.forceStatus;
+  if(diffDays < 0) return 'expired';
+  if(diffDays < 60) return 'near_expiry';
+  return 'normal';
+}
+
+function seedData(){
+  let id=1;
+  const owners = ['ณัฐวุฒิ ใจดี','พิมพ์ชนก แสงทอง','อนุชา ศรีสุข','กมลวรรณ พงษ์เจริญ','ธีรพงษ์ วัฒนกุล'];
+  const forceCycle = ['','','','need_repair','','low_pressure','','','damaged','','',''];
+  BUILDINGS.forEach((b,bi)=>{
+    for(let floor=1; floor<=4; floor++){
+      for(let i=1;i<=2;i++){
+        const code = `FE-${String.fromCharCode(65+bi)}-${floor}0${i}`;
+        const install = daysFromNow(-365* (1+Math.floor(Math.random()*3)));
+        const expire = daysFromNow([400,120,20,-15,300,60][id%6]);
+        const lastInspected = (id%7===0) ? null : daysFromNow(-Math.floor(Math.random()*40));
+        const ext = {
+          id: 'ext-'+id,
+          code,
+          serial: 'SN'+pad(100000+id,6),
+          type: TYPES[id%TYPES.length],
+          size: ['4 kg','10 lbs','6 kg','2.5 kg','15 lbs'][id%5],
+          building: b,
+          floor: String(floor),
+          room: `ทางเดินชั้น ${floor} จุดที่ ${i}`,
+          lat: (13.75 + bi*0.001 + floor*0.0002).toFixed(6),
+          lng: (100.50 + bi*0.001 + floor*0.0002).toFixed(6),
+          installDate: isoDate(install),
+          expireDate: isoDate(expire),
+          company: 'บจก. เซฟตี้ ไฟร์ ซัพพลาย',
+          owner: owners[id%owners.length],
+          lastInspected: lastInspected ? isoDate(lastInspected) : null,
+          forceStatus: forceCycle[id%forceCycle.length] || '',
+          photo: null,
+        };
+        extinguishers.push(ext);
+        // seed 1-3 historical inspections
+        const numInsp = lastInspected ? (1+Math.floor(Math.random()*3)) : 0;
+        for(let k=0;k<numInsp;k++){
+          const insDate = daysFromNow(-(k*30+Math.floor(Math.random()*10)));
+          const passed = Math.random()>0.15;
+          const checklist = {};
+          CHECK_ITEMS.forEach(ci=> checklist[ci.key] = passed || Math.random()>0.3 ? 'ok':'bad');
+          inspections.push({
+            id: 'insp-'+id+'-'+k,
+            extId: ext.id,
+            date: isoDate(insDate),
+            inspector: USERS[1].name,
+            pressure: (Math.random()*20+80).toFixed(0)+'%',
+            checklist,
+            result: passed?'ผ่าน':'ไม่ผ่าน',
+            notes: passed? '' : 'พบความผิดปกติ ต้องติดตามซ่อมบำรุง',
+            photos: [],
+            gps: {lat: ext.lat, lng: ext.lng},
+            sig: null,
+          });
+        }
+        id++;
+      }
+    }
+  });
+  activityLog = [
+    {time:new Date(Date.now()-3600e3), user:'admin', action:'เข้าสู่ระบบ'},
+    {time:new Date(Date.now()-7200e3), user:'inspector', action:'บันทึกผลตรวจ FE-A-101'},
+    {time:new Date(Date.now()-10800e3), user:'admin', action:'เพิ่มถังดับเพลิงใหม่ FE-C-402'},
+  ];
+}
+
+/** โหลดข้อมูลถังดับเพลิง + ประวัติการตรวจ จาก backend จริง (หรือใช้ข้อมูลจำลองถ้าไม่ได้ตั้งค่า API_URL) — โหมดจริงเรียกหลัง login เท่านั้น */
+async function loadInitialData(){
+  if(DEMO_MODE){
+    seedData();
+    return;
+  }
+  try{
+    const [exts, insps] = await Promise.all([apiGet('listExtinguishers'), apiGet('listInspections')]);
+    const OVERRIDE_STATUSES = ['need_repair','low_pressure','damaged'];
+    extinguishers = (exts||[]).map(e=>({...e, forceStatus: OVERRIDE_STATUSES.includes(e.status) ? e.status : ''}));
+    inspections = (insps||[]).map(i=>{
+      let checklist = {};
+      try{ checklist = typeof i.checklistJSON==='string' ? JSON.parse(i.checklistJSON||'{}') : (i.checklist||{}); }catch(_){ checklist = {}; }
+      return {...i, checklist,
+        gps: {lat: i.gpsLat, lng: i.gpsLng},
+        photoFiles: String(i.photoUrls||'').split(',').map(driveId).filter(Boolean),
+        sigFile: driveId(i.signatureUrl)};
+    });
+  } catch(err){
+    if(err.silent) return;
+    console.error(err);
+    Swal.fire({icon:'error', title:'เชื่อมต่อ Backend ไม่สำเร็จ', text:err.message||'ไม่สามารถโหลดข้อมูลจาก Google Apps Script ได้ กรุณาตรวจสอบ API_URL', confirmButtonColor:'#C62828'});
+  }
+}
+if(DEMO_MODE) loadInitialData();
+
+if(!DEMO_MODE){
+  // เชื่อมต่อ backend จริงแล้ว: ซ่อนปุ่มเลือกบทบาทตัวอย่างและข้อความบัญชีทดลอง แล้วเคลียร์ช่องกรอกให้ผู้ใช้กรอกบัญชีจริง
+  document.getElementById('rolePick').style.display = 'none';
+  document.getElementById('demoCredsBanner').style.display = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('goRegisterWrap').style.display = ''; // สมัครสมาชิกเองได้เฉพาะตอนเชื่อมต่อ Backend จริง
+}
+
+/* ---------------- login ---------------- */
+document.querySelectorAll('.role-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('loginUser').value = btn.dataset.user;
+    document.getElementById('loginPass').value = btn.dataset.pass;
+  });
+});
+/* ป้องกันการเดารหัสผ่านซ้ำๆ (brute force) แบบพื้นฐานฝั่ง client:
+   ล็อกการกดปุ่ม login ชั่วคราวหลังพลาดครบจำนวนที่กำหนด — นี่เป็นเพียงการป้องกันชั้นแรกเท่านั้น
+   การป้องกัน brute force ที่แท้จริงต้องทำที่ backend (Code.gs) ด้วย เช่น จำกัดจำนวนครั้ง/นาทีต่อ IP หรือต่อ username */
+let loginFailCount = 0, loginLockUntil = 0;
+async function doLogin(){
+  if(Date.now() < loginLockUntil){
+    const secs = Math.ceil((loginLockUntil-Date.now())/1000);
+    Swal.fire({icon:'warning', title:'ลองเข้าสู่ระบบผิดหลายครั้งเกินไป', text:`กรุณารออีก ${secs} วินาทีแล้วลองใหม่`, confirmButtonColor:'#C62828'});
+    return;
+  }
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  let found = null;
+  if(DEMO_MODE){
+    found = USERS.find(x=>x.user===u && x.pass===p);
+    if(!found){
+      loginFailCount++;
+      if(loginFailCount>=5){ loginLockUntil = Date.now()+30000; loginFailCount=0; }
+      Swal.fire({icon:'error', title:'เข้าสู่ระบบไม่สำเร็จ', text:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', confirmButtonColor:'#C62828'});
+      return;
+    }
+  } else {
+    try{
+      const res = await apiPost('login', {username:u, password:p});
+      if(!res.success){
+        if(res.pending){
+          Swal.fire({icon:'info', title:'รอการอนุมัติ', text:res.message||'บัญชีนี้ยังไม่ได้รับการอนุมัติจากแอดมิน กรุณารอการอนุมัติก่อนเข้าสู่ระบบ', confirmButtonColor:'#C62828'});
+          return;
+        }
+        loginFailCount++;
+        if(loginFailCount>=5){ loginLockUntil = Date.now()+30000; loginFailCount=0; }
+        Swal.fire({icon:'error', title:'เข้าสู่ระบบไม่สำเร็จ', text:res.message||'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', confirmButtonColor:'#C62828'});
+        return;
+      }
+      // แปลงรูปแบบผู้ใช้จาก Sheet (username/role/fullName) ให้ตรงกับที่หน้าจออื่นๆ ใช้ (user/role/name)
+      if(!res.token) throw new Error('Backend ไม่ส่ง token กลับมา — ตรวจสอบว่า deploy Code.gs เวอร์ชันใหม่แล้ว');
+      authToken = res.token;
+      found = {user:res.user.username, role:res.user.role, name:res.user.fullName};
+    } catch(err){
+      Swal.fire({icon:'error', title:'เชื่อมต่อไม่สำเร็จ', text:err.message||'ไม่สามารถเชื่อมต่อ Backend ได้', confirmButtonColor:'#C62828'});
+      return;
+    }
+  }
+  loginFailCount = 0;
+  currentUser = found;
+  if(!DEMO_MODE){ await loadInitialData(); }
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('sideUserName').textContent = found.name;
+  const roleBadge = document.getElementById('sideUserRole');
+  roleBadge.textContent = ROLE_LABEL[found.role];
+  roleBadge.className = 'badge-status '+(ROLE_BADGE_CLASS[found.role]||'st-normal');
+  document.getElementById('sideModeLabel').innerHTML = DEMO_MODE
+    ? '<i class="bi bi-hdd"></i> โหมดข้อมูลจำลอง (เครื่องนี้เท่านั้น)'
+    : '<i class="bi bi-cloud-check"></i> เชื่อมต่อ Google Sheet · หลายผู้ใช้งานพร้อมกัน';
+  applyRolePermissions();
+  populateFilterOptions();
+  renderAll();
+  startAutoSync();
+  Swal.fire({toast:true, position:'top-end', icon:'success', title:'ยินดีต้อนรับ, '+found.name, showConfirmButton:false, timer:2200});
+}
+
+/* ---------------- สมัครสมาชิก (self sign-up) ----------------
+   ใช้งานได้เฉพาะตอนเชื่อมต่อ Backend จริงเท่านั้น (ไม่มีความหมายในโหมดเดโม เพราะข้อมูลไม่ถูกบันทึกจริง)
+   บัญชีที่สมัครเองจะได้สิทธิ์ inspector เสมอ — ฝั่ง frontend ไม่ส่ง role ไปให้เลือกโดยเจตนา
+   เพื่อป้องกันการปลอมค่า role เป็น admin ผ่าน dev tools (ฝั่ง backend ก็บังคับ role='inspector' ซ้ำอีกชั้นด้วย) */
+function showRegisterForm(){
+  document.querySelectorAll('.login-form-side')[0].style.display = 'none';
+  document.getElementById('registerFormSide').style.display = 'block';
+}
+function showLoginForm(){
+  document.getElementById('registerFormSide').style.display = 'none';
+  document.querySelectorAll('.login-form-side')[0].style.display = 'block';
+}
+async function doRegister(){
+  const fullName = document.getElementById('regFullName').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const password2 = document.getElementById('regPassword2').value;
+
+  if(!fullName || !username || !password){
+    Swal.fire({icon:'warning', title:'กรอกไม่ครบ', text:'กรุณากรอกชื่อ-นามสกุล ชื่อผู้ใช้ และรหัสผ่านให้ครบ', confirmButtonColor:'#C62828'});
+    return;
+  }
+  if(password.length < 8){
+    Swal.fire({icon:'warning', title:'รหัสผ่านสั้นเกินไป', text:'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร', confirmButtonColor:'#C62828'});
+    return;
+  }
+  if(password !== password2){
+    Swal.fire({icon:'warning', title:'รหัสผ่านไม่ตรงกัน', text:'กรุณากรอกยืนยันรหัสผ่านให้ตรงกับรหัสผ่านที่กรอกไว้', confirmButtonColor:'#C62828'});
+    return;
+  }
+  try{
+    const res = await apiPost('register', {fullName, username, email, password});
+    if(!res.success){
+      Swal.fire({icon:'error', title:'สมัครสมาชิกไม่สำเร็จ', text:res.message||'เกิดข้อผิดพลาด กรุณาลองใหม่', confirmButtonColor:'#C62828'});
+      return;
+    }
+    Swal.fire({icon:'success', title:'สมัครสมาชิกสำเร็จ', text:'บัญชีของคุณรอการอนุมัติจากแอดมินก่อนจึงจะเข้าสู่ระบบได้ กรุณาติดต่อแอดมินหรือรอการแจ้งเตือน', confirmButtonColor:'#C62828'});
+    document.getElementById('loginUser').value = username;
+    document.getElementById('loginPass').value = '';
+    document.getElementById('regFullName').value = '';
+    document.getElementById('regUsername').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+    document.getElementById('regPassword2').value = '';
+    showLoginForm();
+  } catch(err){
+    Swal.fire({icon:'error', title:'เชื่อมต่อไม่สำเร็จ', text:err.message||'ไม่สามารถเชื่อมต่อ Backend ได้', confirmButtonColor:'#C62828'});
+  }
+}
+
+let autoSyncTimer = null;
+/** เมื่อเชื่อมต่อ backend จริง ให้ดึงข้อมูลล่าสุดจาก Google Sheet เป็นระยะ เพื่อให้เห็นการเปลี่ยนแปลงจากผู้ใช้งานคนอื่นแบบใกล้เคียง real-time */
+function startAutoSync(){
+  if(DEMO_MODE || autoSyncTimer) return;
+  autoSyncTimer = setInterval(async ()=>{
+    await loadInitialData();
+    refreshCurrentView();
+  }, 45000);
+}
+function stopAutoSync(){ if(autoSyncTimer){ clearInterval(autoSyncTimer); autoSyncTimer=null; } }
+function refreshCurrentView(){
+  const activeView = document.querySelector('.view.active')?.id;
+  populateFilterOptions();
+  if(activeView==='view-dashboard') renderDashboard();
+  if(activeView==='view-list') renderListView();
+  if(activeView==='view-scan') renderScanPickList();
+  if(activeView==='view-history') renderHistoryView();
+  if(activeView==='view-reports') renderReport();
+  if(activeView==='view-notifications') renderNotifications();
+  updateNotifBadge();
+}
+async function manualRefresh(){
+  const btn = document.getElementById('btnRefreshData');
+  btn.querySelector('i').classList.add('bi-spin');
+  if(DEMO_MODE){
+    Swal.fire({toast:true, position:'top-end', icon:'info', title:'โหมดข้อมูลจำลอง — ไม่มีข้อมูลจากผู้ใช้อื่นให้ซิงค์', showConfirmButton:false, timer:2200});
+  } else {
+    try{
+      await loadInitialData();
+      refreshCurrentView();
+      Swal.fire({toast:true, position:'top-end', icon:'success', title:'ซิงค์ข้อมูลล่าสุดแล้ว', showConfirmButton:false, timer:1600});
+    }catch(err){
+      Swal.fire({toast:true, position:'top-end', icon:'error', title:'ซิงค์ข้อมูลไม่สำเร็จ', showConfirmButton:false, timer:2000});
+    }
+  }
+  setTimeout(()=>btn.querySelector('i').classList.remove('bi-spin'), 500);
+}
+function doLogout(){
+  if(!DEMO_MODE && authToken){ apiPost('logout').catch(()=>{}); }
+  authToken = null;
+  currentUser=null;
+  if(!DEMO_MODE){ extinguishers = []; inspections = []; activityLog = []; }
+  stopAutoSync();
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+/* ---------------- nav ---------------- */
+document.querySelectorAll('.nav-link-app[data-view]').forEach(link=>{
+  link.addEventListener('click', ()=> switchView(link.dataset.view));
+});
+const VIEW_META = {
+  dashboard:['Dashboard','ภาพรวมระบบ'],
+  list:['รายการถังดับเพลิง','จัดการข้อมูลถังดับเพลิงทั้งหมด'],
+  scan:['สแกน QR ตรวจเช็ค','สแกนรหัส QR เพื่อเริ่มการตรวจเช็ค'],
+  inspect:['แบบฟอร์มตรวจเช็ค','กรอกผลการตรวจตามรายการ'],
+  history:['ประวัติการตรวจ','Timeline การตรวจเช็คย้อนหลัง'],
+  reports:['รายงาน','สรุปผลและออกรายงาน PDF / Excel'],
+  admin:['จัดการระบบ','ผู้ใช้งาน ข้อมูล และการตั้งค่า'],
+  notifications:['การแจ้งเตือน','รายการที่ต้องติดตาม'],
+};
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-link-app[data-view]').forEach(l=>l.classList.toggle('active', l.dataset.view===name));
+  document.getElementById('pageTitle').textContent = VIEW_META[name][0];
+  document.getElementById('pagePath').textContent = VIEW_META[name][1];
+  toggleSidebar(false);
+  if(name==='dashboard') renderDashboard();
+  if(name==='list') renderListView();
+  if(name==='scan') renderScanPickList();
+  if(name==='history') renderHistoryView();
+  if(name==='reports') renderReport();
+  if(name==='admin') renderAdmin('users');
+  if(name==='notifications') renderNotifications();
+  window.scrollTo(0,0);
+}
+function toggleSidebar(open){
+  document.getElementById('sidebar').classList.toggle('open', !!open);
+  document.getElementById('sidebarOverlay').classList.toggle('show', !!open);
+}
+
+function renderAll(){
+  renderDashboard();
+  populateFilterOptions();
+  updateNotifBadge();
+}
+
+/* ---------------- filters helpers ---------------- */
+function populateFilterOptions(){
+  const bSel = ['fBuilding','hBuilding','rBuilding'];
+  bSel.forEach(id=>{
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">'+(id==='rBuilding'?'ทุกอาคาร':'ทุกอาคาร')+'</option>' + BUILDINGS.map(b=>`<option value="${b}">${b}</option>`).join('');
+  });
+  const tSel = document.getElementById('fType');
+  tSel.innerHTML='<option value="">ทุกประเภท</option>'+TYPES.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const sSel = document.getElementById('fStatus');
+  sSel.innerHTML='<option value="">ทุกสถานะ</option>'+Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  const hExt = document.getElementById('hExtSelect');
+  hExt.innerHTML='<option value="">— เลือกถังดับเพลิงเพื่อดูประวัติ —</option>'+extinguishers.map(e=>`<option value="${esc(e.id)}">${esc(e.code)} — ${esc(e.building)} ชั้น ${esc(e.floor)}</option>`).join('');
+  const rInsp = document.getElementById('rInspector');
+  const inspNames = [...new Set(inspections.map(i=>i.inspector))];
+  rInsp.innerHTML='<option value="">ผู้ตรวจทั้งหมด</option>'+inspNames.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  document.getElementById('hExtSelect').onchange = renderHistoryView;
+  document.getElementById('hBuilding').onchange = renderHistoryView;
+}
+function clearFilters(){
+  document.getElementById('fSearch').value='';
+  document.getElementById('fBuilding').value='';
+  document.getElementById('fType').value='';
+  document.getElementById('fStatus').value='';
+  renderListView();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const total = extinguishers.length;
+  const withStatus = extinguishers.map(e=>({...e, status:computeStatus(e)}));
+  const counts = {};
+  Object.keys(STATUS).forEach(k=>counts[k]=0);
+  withStatus.forEach(e=>counts[e.status]++);
+  const inspectedCount = withStatus.filter(e=>e.lastInspected).length;
+
+  const cards = [
+    {label:'ถังดับเพลิงทั้งหมด', val: total, icon:'bi-fire', bg:'var(--red-50)', fg:'var(--red-600)'},
+    {label:'ตรวจแล้ว', val: inspectedCount, icon:'bi-check2-circle', bg:'var(--ok-bg)', fg:'var(--ok)'},
+    {label:'ยังไม่ตรวจ', val: counts.not_inspected, icon:'bi-hourglass-split', bg:'var(--grey-bg)', fg:'var(--grey)'},
+    {label:'ใกล้หมดอายุ', val: counts.near_expiry, icon:'bi-alarm', bg:'var(--warn-bg)', fg:'var(--warn)'},
+    {label:'ต้องซ่อม / ชำรุด', val: counts.need_repair+counts.damaged, icon:'bi-tools', bg:'var(--bad-bg)', fg:'var(--bad)'},
+    {label:'หมดอายุ', val: counts.expired, icon:'bi-x-octagon', bg:'#F3D9D9', fg:'#5E0000'},
+  ];
+  document.getElementById('statCards').innerHTML = cards.map(c=>`
+    <div class="col-6 col-lg-2">
+      <div class="stat-card">
+        <div class="tophole"></div>
+        <div class="stat-icon mb-2" style="background:${c.bg};color:${c.fg}"><i class="bi ${c.icon}"></i></div>
+        <div class="lbl">${c.label}</div>
+        <div class="val">${c.val}</div>
+      </div>
+    </div>`).join('');
+
+  // status pie
+  if(charts.status) charts.status.destroy();
+  charts.status = new Chart(document.getElementById('chartStatus'), {
+    type:'doughnut',
+    data:{ labels:Object.values(STATUS).map(s=>s.label),
+      datasets:[{ data:Object.keys(STATUS).map(k=>counts[k]), backgroundColor:Object.values(STATUS).map(s=>s.color), borderWidth:2, borderColor:'#fff'}]},
+    options:{plugins:{legend:{position:'bottom', labels:{font:{family:'Sarabun',size:11}, boxWidth:10, padding:12}}}, cutout:'62%'}
+  });
+
+  // building bar (problem counts)
+  const problemStatuses = ['near_expiry','low_pressure','need_repair','expired','damaged'];
+  const byBuilding = BUILDINGS.map(b=> withStatus.filter(e=>e.building===b && problemStatuses.includes(e.status)).length);
+  const okByBuilding = BUILDINGS.map(b=> withStatus.filter(e=>e.building===b && e.status==='normal').length);
+  if(charts.building) charts.building.destroy();
+  charts.building = new Chart(document.getElementById('chartBuilding'), {
+    type:'bar',
+    data:{labels:BUILDINGS, datasets:[
+      {label:'ปกติ', data:okByBuilding, backgroundColor:'#2E7D32', borderRadius:6},
+      {label:'มีปัญหา', data:byBuilding, backgroundColor:'#C62828', borderRadius:6},
+    ]},
+    options:{responsive:true, plugins:{legend:{position:'bottom', labels:{font:{family:'Sarabun'}}}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}}
+  });
+
+  // monthly trend
+  const months = [];
+  for(let i=5;i>=0;i--){ const d=new Date(); d.setMonth(d.getMonth()-i); months.push(d); }
+  const monthLabels = months.map(d=>d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'}));
+  const monthData = months.map(d=>{
+    return inspections.filter(ins=>{ const id=new Date(ins.date); return id.getMonth()===d.getMonth() && id.getFullYear()===d.getFullYear(); }).length;
+  });
+  if(charts.monthly) charts.monthly.destroy();
+  charts.monthly = new Chart(document.getElementById('chartMonthly'), {
+    type:'line',
+    data:{labels:monthLabels, datasets:[{label:'จำนวนการตรวจ', data:monthData, borderColor:'#C62828', backgroundColor:'rgba(198,40,40,.12)', fill:true, tension:.35, pointBackgroundColor:'#C62828'}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}}
+  });
+
+  // top problem buildings
+  const probPairs = BUILDINGS.map((b,i)=>({b, n:byBuilding[i]})).sort((a,b)=>b.n-a.n);
+  document.getElementById('topProblemBuildings').innerHTML = probPairs.map((p,i)=>`
+    <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid var(--ink-100)">
+      <div class="d-flex align-items-center gap-2"><span class="badge-status st-need_repair">#${i+1}</span><b>${esc(p.b)}</b></div>
+      <div class="text-danger fw-bold">${p.n} จุด</div>
+    </div>`).join('') || '<div class="empty-state">ไม่มีข้อมูล</div>';
+
+  // urgent table
+  const urgent = withStatus.filter(e=>['need_repair','expired','damaged','low_pressure'].includes(e.status)).slice(0,8);
+  document.getElementById('urgentTable').innerHTML = `
+    <thead><tr><th>รหัสถัง</th><th>อาคาร/จุด</th><th>สถานะ</th><th>วันหมดอายุ</th><th>ผู้รับผิดชอบ</th><th></th></tr></thead>
+    <tbody>${urgent.map(e=>`
+      <tr>
+        <td class="fw-semibold">${esc(e.code)}</td>
+        <td>${esc(e.building)} · ${esc(e.room)}</td>
+        <td><span class="badge-status st-${e.status}">${STATUS[e.status].label}</span></td>
+        <td>${fmtDate(e.expireDate)}</td>
+        <td>${esc(e.owner)}</td>
+        <td><button class="link-btn" onclick="openDetail('${escJs(e.id)}')">รายละเอียด</button></td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">ไม่มีรายการเร่งด่วน</td></tr>'}
+    </tbody>`;
+
+  updateNotifBadge();
+}
+
+/* ---------------- LIST VIEW ---------------- */
+function renderListView(){
+  const q = (document.getElementById('fSearch').value||'').toLowerCase();
+  const fb = document.getElementById('fBuilding').value;
+  const ft = document.getElementById('fType').value;
+  const fs = document.getElementById('fStatus').value;
+  let list = extinguishers.map(e=>({...e, status:computeStatus(e)}));
+  list = list.filter(e=>{
+    if(fb && e.building!==fb) return false;
+    if(ft && e.type!==ft) return false;
+    if(fs && e.status!==fs) return false;
+    if(q && !(e.code.toLowerCase().includes(q)||e.serial.toLowerCase().includes(q)||e.room.toLowerCase().includes(q)||e.owner.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const typeIcon = {'CO2':'bi-cloud-fog2','Dry Chemical':'bi-droplet-half','Foam':'bi-water','Water':'bi-droplet','Clean Agent':'bi-wind'};
+  document.getElementById('extGrid').innerHTML = list.map(e=>`
+    <div class="col-sm-6 col-lg-4 col-xl-3">
+      <div class="tag-card" onclick="openDetail('${escJs(e.id)}')">
+        <div class="punch"></div>
+        <div class="tag-swatch"><i class="bi ${typeIcon[e.type]||'bi-fire'}"></i></div>
+        <div class="code">${esc(e.code)}</div>
+        <div class="loc">${esc(e.building)} · ชั้น ${esc(e.floor)} · ${esc(e.room)}</div>
+        <div class="mt-2"><span class="badge-status st-${e.status}">${STATUS[e.status].label}</span></div>
+        <div class="row-mini"><span>ประเภท</span><b>${esc(e.type)}</b></div>
+        <div class="row-mini"><span>หมดอายุ</span><b>${fmtDate(e.expireDate)}</b></div>
+        <div class="row-mini"><span>ตรวจล่าสุด</span><b>${e.lastInspected? fmtDate(e.lastInspected):'ยังไม่ตรวจ'}</b></div>
+      </div>
+    </div>`).join('') || '<div class="col-12"><div class="empty-state"><i class="bi bi-inbox"></i>ไม่พบข้อมูลตามเงื่อนไข</div></div>';
+}
+
+/* ---------------- EXT CRUD ---------------- */
+function openExtModal(id){
+  document.getElementById('extModalTitle').textContent = id? 'แก้ไขถังดับเพลิง':'เพิ่มถังดับเพลิง';
+  const e = id? extinguishers.find(x=>x.id===id) : null;
+  document.getElementById('extId').value = id||'';
+  document.getElementById('extCode').value = e?.code||'';
+  document.getElementById('extSerial').value = e?.serial||'';
+  document.getElementById('extType').value = e?.type||'CO2';
+  document.getElementById('extSize').value = e?.size||'';
+  document.getElementById('extBuilding').value = e?.building||'';
+  document.getElementById('extFloor').value = e?.floor||'';
+  document.getElementById('extRoom').value = e?.room||'';
+  document.getElementById('extInstall').value = e?.installDate||'';
+  document.getElementById('extExpire').value = e?.expireDate||'';
+  document.getElementById('extCompany').value = e?.company||'';
+  document.getElementById('extOwner').value = e?.owner||'';
+  document.getElementById('extLat').value = e?.lat ?? '';
+  document.getElementById('extLng').value = e?.lng ?? '';
+  new bootstrap.Modal(document.getElementById('extModal')).show();
+}
+function fillExtGPS(){
+  if(!navigator.geolocation){ Swal.fire({icon:'info', title:'อุปกรณ์นี้ไม่รองรับ GPS', confirmButtonColor:'#C62828'}); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('extLat').value = pos.coords.latitude.toFixed(6);
+    document.getElementById('extLng').value = pos.coords.longitude.toFixed(6);
+  }, ()=> Swal.fire({icon:'info', title:'ไม่สามารถอ่านตำแหน่งได้', text:'ตรวจสอบสิทธิ์การเข้าถึงตำแหน่งของเบราว์เซอร์ หรือกรอกพิกัดเอง', confirmButtonColor:'#C62828'}), {enableHighAccuracy:true, timeout:10000});
+}
+async function saveExt(){
+  const id = document.getElementById('extId').value;
+  const data = {
+    code: document.getElementById('extCode').value.trim(),
+    serial: document.getElementById('extSerial').value.trim(),
+    type: document.getElementById('extType').value,
+    size: document.getElementById('extSize').value.trim(),
+    building: document.getElementById('extBuilding').value.trim(),
+    floor: document.getElementById('extFloor').value.trim(),
+    room: document.getElementById('extRoom').value.trim(),
+    installDate: document.getElementById('extInstall').value,
+    expireDate: document.getElementById('extExpire').value,
+    company: document.getElementById('extCompany').value.trim(),
+    owner: document.getElementById('extOwner').value.trim(),
+    lat: document.getElementById('extLat').value.trim(),
+    lng: document.getElementById('extLng').value.trim(),
+  };
+  const latN = Number(data.lat), lngN = Number(data.lng);
+  if((data.lat!=='' && !(isFinite(latN) && Math.abs(latN)<=90)) || (data.lng!=='' && !(isFinite(lngN) && Math.abs(lngN)<=180))){
+    Swal.fire({icon:'warning', title:'พิกัดไม่ถูกต้อง', text:'ละติจูดต้องอยู่ระหว่าง -90 ถึง 90 และลองจิจูดระหว่าง -180 ถึง 180', confirmButtonColor:'#C62828'});
+    return;
+  }
+  if(!data.code || !data.building){
+    Swal.fire({icon:'warning', title:'กรอกข้อมูลไม่ครบ', text:'กรุณาระบุรหัสถังและอาคารอย่างน้อย', confirmButtonColor:'#C62828'});
+    return;
+  }
+  try{
+    if(DEMO_MODE){
+      if(id){
+        const idx = extinguishers.findIndex(x=>x.id===id);
+        extinguishers[idx] = {...extinguishers[idx], ...data};
+        logActivity(`แก้ไขข้อมูลถังดับเพลิง ${data.code}`);
+      } else {
+        extinguishers.push({id:'ext-'+Date.now(), lastInspected:null, forceStatus:'', photo:null, ...data});
+        logActivity(`เพิ่มถังดับเพลิงใหม่ ${data.code}`);
+      }
+    } else if(id){
+      await apiPost('updateExt', {id, ...data, updatedBy: currentUser?.user});
+      const updated = await apiGet('getExtinguisher', {id});
+      const idx = extinguishers.findIndex(x=>x.id===id);
+      if(updated) extinguishers[idx] = {...extinguishers[idx], ...updated};
+      logActivity(`แก้ไขข้อมูลถังดับเพลิง ${data.code}`);
+    } else {
+      const created = await apiPost('createExt', {...data, updatedBy: currentUser?.user});
+      extinguishers.push({id:created.id, status:'not_inspected', lastInspected:null, forceStatus:'', photo:null, ...data});
+      logActivity(`เพิ่มถังดับเพลิงใหม่ ${data.code}`);
+    }
+  } catch(err){
+    Swal.fire({icon:'error', title:'บันทึกไม่สำเร็จ', text:err.message||'ไม่สามารถเชื่อมต่อ Backend ได้', confirmButtonColor:'#C62828'});
+    return;
+  }
+  bootstrap.Modal.getInstance(document.getElementById('extModal')).hide();
+  populateFilterOptions(); renderListView(); renderDashboard();
+  Swal.fire({toast:true, position:'top-end', icon:'success', title:'บันทึกข้อมูลแล้ว', showConfirmButton:false, timer:1800});
+}
+function deleteExt(id){
+  Swal.fire({icon:'warning', title:'ยืนยันการลบ?', text:'การลบจะไม่สามารถย้อนกลับได้', showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#C62828'}).then(async r=>{
+    if(r.isConfirmed){
+      const e = extinguishers.find(x=>x.id===id);
+      try{
+        if(!DEMO_MODE) await apiPost('deleteExt', {id, actingUser: currentUser?.user});
+      } catch(err){
+        Swal.fire({icon:'error', title:'ลบไม่สำเร็จ', text:err.message||'ไม่สามารถเชื่อมต่อ Backend ได้', confirmButtonColor:'#C62828'});
+        return;
+      }
+      extinguishers = extinguishers.filter(x=>x.id!==id);
+      logActivity(`ลบถังดับเพลิง ${e?.code||id}`);
+      bootstrap.Modal.getInstance(document.getElementById('detailModal'))?.hide();
+      renderListView(); renderDashboard(); populateFilterOptions();
+      Swal.fire({toast:true, position:'top-end', icon:'success', title:'ลบข้อมูลแล้ว', showConfirmButton:false, timer:1800});
+    }
+  });
+}
+
+/* ---------------- DETAIL / QR MODAL ---------------- */
+function openDetail(id){
+  const e = extinguishers.find(x=>x.id===id);
+  if(!e) return;
+  const status = computeStatus(e);
+  const hist = inspections.filter(i=>i.extId===id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('detailModalContent').innerHTML = `
+    <div class="modal-header">
+      <div>
+        <h5 class="modal-title">${esc(e.code)}</h5>
+        <div class="text-muted small">${esc(e.building)} · ชั้น ${esc(e.floor)} · ${esc(e.room)}</div>
+      </div>
+      <button class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-7">
+          <span class="badge-status st-${status} mb-2 d-inline-flex">${STATUS[status].label}</span>
+          <table class="table table-sm mb-3">
+            <tr><td class="text-muted">Serial</td><td class="fw-semibold">${esc(e.serial)}</td></tr>
+            <tr><td class="text-muted">ประเภท</td><td>${esc(e.type)} · ${esc(e.size)}</td></tr>
+            <tr><td class="text-muted">วันติดตั้ง</td><td>${fmtDate(e.installDate)}</td></tr>
+            <tr><td class="text-muted">วันหมดอายุ</td><td>${fmtDate(e.expireDate)}</td></tr>
+            <tr><td class="text-muted">บริษัทติดตั้ง</td><td>${esc(e.company)}</td></tr>
+            <tr><td class="text-muted">ผู้รับผิดชอบ</td><td>${esc(e.owner)}</td></tr>
+            ${hasGPS(e)?`<tr><td class="text-muted">พิกัด GPS</td><td>${esc(e.lat)}, ${esc(e.lng)} <a href="${safeUrl('https://www.google.com/maps?q='+encodeURIComponent(e.lat)+','+encodeURIComponent(e.lng))}" target="_blank" rel="noopener noreferrer">แผนที่ <i class="bi bi-box-arrow-up-right"></i></a></td></tr>`:''}
+            <tr><td class="text-muted">ตรวจล่าสุด</td><td>${e.lastInspected? fmtDate(e.lastInspected):'ยังไม่ตรวจ'}</td></tr>
+          </table>
+          <div class="d-flex gap-2 flex-wrap">
+            ${can('inspect') ? `<button class="btn btn-sm btn-fire" onclick="bootstrap.Modal.getInstance(document.getElementById('detailModal'))?.hide(); goInspect('${escJs(e.id)}');"><i class="bi bi-clipboard-check"></i> ตรวจเช็คตอนนี้</button>` : ''}
+            ${can('manageExt') ? `<button class="btn btn-sm btn-outline-fire" onclick="openExtModal('${escJs(e.id)}')"><i class="bi bi-pencil"></i> แก้ไข</button>` : ''}
+            ${can('deleteExt') ? `<button class="btn btn-sm btn-outline-fire" onclick="deleteExt('${escJs(e.id)}')"><i class="bi bi-trash"></i> ลบ</button>` : ''}
+            ${!can('inspect') && !can('manageExt') && !can('deleteExt') ? `<span class="small text-muted"><i class="bi bi-eye"></i> สิทธิ์ของคุณดูข้อมูลได้อย่างเดียว</span>` : ''}
+          </div>
+        </div>
+        <div class="col-md-5 text-center">
+          <div id="qrHolder" class="d-flex justify-content-center mb-2"></div>
+          <div class="small text-muted mb-2">${esc(e.code)}</div>
+          <button class="btn btn-sm btn-outline-fire" onclick="printQR('${escJs(e.id)}')"><i class="bi bi-printer"></i> พิมพ์ QR</button>
+        </div>
+      </div>
+      <hr>
+      <h6 class="fw-bold mb-2">ประวัติการตรวจล่าสุด</h6>
+      ${hist.length? hist.slice(0,3).map(h=>`
+        <div class="card-mini mb-2" style="border:1px solid var(--ink-100);border-radius:8px;padding:10px 12px;">
+          <div class="d-flex justify-content-between"><b>${fmtDate(h.date)}</b><span class="badge-status ${h.result==='ผ่าน'?'st-normal':'st-need_repair'}">${esc(h.result)}</span></div>
+          <div class="small text-muted">ผู้ตรวจ: ${esc(h.inspector)} · แรงดัน ${esc(h.pressure)}</div>
+        </div>`).join('') : '<div class="text-muted small">ยังไม่มีประวัติการตรวจ</div>'}
+    </div>`;
+  const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+  modal.show();
+  setTimeout(()=>{
+    const holder = document.getElementById('qrHolder');
+    if(holder && typeof QRCode !== 'undefined'){
+      holder.innerHTML='';
+      new QRCode(holder, {text:'FE:'+e.code, width:140, height:140, colorDark:'#20211F', colorLight:'#ffffff'});
+    } else if(holder){
+      holder.innerHTML = `<div class="border rounded p-3 small text-muted">QR library not loaded<br>รหัส: FE:${esc(e.code)}</div>`;
+    }
+  }, 60);
+}
+function printQR(id){
+  const e = extinguishers.find(x=>x.id===id);
+  const holder = document.getElementById('qrHolder');
+  const img = holder.querySelector('img, canvas');
+  let src = '';
+  // src มาจาก canvas/img ที่สร้างเองในหน้านี้ (ไม่ใช่จากผู้ใช้) แต่ยังกรอง scheme ที่อันตรายไว้เผื่อ
+  if(img && img.tagName==='IMG') src = safeUrl(img.src);
+  else if(img && img.tagName==='CANVAS') src = img.toDataURL();
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>QR ${esc(e.code)}</title></head><body style="font-family:sans-serif;text-align:center;padding:40px;">
+    <h3>${esc(e.code)}</h3><p>${esc(e.building)} ชั้น ${esc(e.floor)} · ${esc(e.room)}</p>
+    ${src?`<img src="${src}" style="width:220px;height:220px">`:'<p>QR code</p>'}
+    <p style="font-size:12px;color:#777">สแกนเพื่อเปิดข้อมูลถังดับเพลิงนี้ในระบบ FireCheck</p>
+    <script>window.onload=()=>window.print()<\/script>
+    </body></html>`);
+  w.document.close();
+}
+
+/* ---------------- QR SCAN ---------------- */
+function renderScanPickList(){
+  document.getElementById('scanPickList').innerHTML = extinguishers.map(e=>`
+    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid var(--ink-100)">
+      <div><b>${esc(e.code)}</b><div class="small text-muted">${esc(e.building)} · ${esc(e.room)}</div></div>
+      <button class="btn btn-sm btn-outline-fire" onclick="goInspect('${escJs(e.id)}')">เลือก</button>
+    </div>`).join('');
+}
+async function startScan(){
+  const video = document.getElementById('qrVideo');
+  const statusEl = document.getElementById('scanStatus');
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject = mediaStream;
+    await video.play();
+    document.getElementById('scanFrame').style.display='block';
+    document.getElementById('btnStartScan').style.display='none';
+    document.getElementById('btnStopScan').style.display='inline-block';
+    statusEl.textContent = 'กำลังค้นหา QR Code...';
+    tickScan();
+  }catch(err){
+    statusEl.textContent = 'ไม่สามารถเข้าถึงกล้องได้ในสภาพแวดล้อมนี้ — กรุณาใช้ช่องค้นหาด้วยรหัส หรือเลือกจากรายการด้านขวาแทน';
+    Swal.fire({icon:'info', title:'เข้าถึงกล้องไม่ได้', text:'สภาพแวดล้อมสาธิตนี้อาจไม่อนุญาตให้ใช้กล้อง ลองใช้ช่องค้นหาด้วยรหัสถังแทนได้เลย', confirmButtonColor:'#C62828'});
+  }
+}
+function stopScan(){
+  if(mediaStream){ mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null; }
+  if(scanRAF) cancelAnimationFrame(scanRAF);
+  document.getElementById('scanFrame').style.display='none';
+  document.getElementById('btnStartScan').style.display='inline-block';
+  document.getElementById('btnStopScan').style.display='none';
+  document.getElementById('scanStatus').textContent='หยุดสแกนแล้ว';
+}
+function tickScan(){
+  const video = document.getElementById('qrVideo');
+  const canvas = document.getElementById('qrCanvas');
+  if(video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR!=='undefined'){
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code = jsQR(img.data, img.width, img.height);
+    if(code && code.data){
+      handleScanResult(code.data);
+      return;
+    }
+  }
+  scanRAF = requestAnimationFrame(tickScan);
+}
+function handleScanResult(text){
+  stopScan();
+  const codeStr = text.replace('FE:','').trim();
+  const e = extinguishers.find(x=>x.code===codeStr);
+  if(e){ goInspect(e.id); }
+  else {
+    Swal.fire({icon:'error', title:'ไม่พบข้อมูลถังดับเพลิง', text:'รหัสที่สแกน: '+text, confirmButtonColor:'#C62828'});
+  }
+}
+function manualScan(){
+  const val = document.getElementById('manualScanInput').value.trim();
+  const e = extinguishers.find(x=>x.code.toLowerCase()===val.toLowerCase());
+  if(e) goInspect(e.id);
+  else Swal.fire({icon:'error', title:'ไม่พบรหัสนี้', text:'กรุณาตรวจสอบรหัสถังอีกครั้ง', confirmButtonColor:'#C62828'});
+}
+
+/* ---------------- INSPECTION FORM (popup) ---------------- */
+let inspectModalInstance = null;
+function goInspect(id){
+  currentInspectTarget = id;
+  currentPhotos = [];
+  currentGPS = null;
+  stopScan(); // ปิดกล้องถ้ากำลังสแกนอยู่ ก่อนเปิดป็อปอัปตรวจเช็ค
+  renderInspectForm();
+  inspectModalInstance = bootstrap.Modal.getOrCreateInstance(document.getElementById('inspectModal'));
+  inspectModalInstance.show();
+}
+function closeInspectModal(){
+  currentInspectTarget = null;
+  currentPhotos = [];
+  currentGPS = null;
+  sigPad = null;
+}
+function renderInspectForm(){
+  const e = extinguishers.find(x=>x.id===currentInspectTarget);
+  if(!e){ document.getElementById('inspectContent').innerHTML = '<div class="empty-state"><i class="bi bi-qr-code-scan"></i>กรุณาสแกนหรือเลือกถังดับเพลิงก่อนเริ่มตรวจเช็ค</div>'; return; }
+  document.getElementById('inspectContent').innerHTML = `
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>ข้อมูลถังดับเพลิง</h3></div>
+          <div class="panel-body">
+            <div class="tag-swatch mb-2"><i class="bi bi-fire"></i></div>
+            <div class="fw-bold" style="font-family:'Kanit'">${esc(e.code)}</div>
+            <div class="small text-muted mb-2">${esc(e.building)} · ชั้น ${esc(e.floor)} · ${esc(e.room)}</div>
+            <table class="table table-sm">
+              <tr><td class="text-muted">ประเภท</td><td>${esc(e.type)} · ${esc(e.size)}</td></tr>
+              <tr><td class="text-muted">Serial</td><td>${esc(e.serial)}</td></tr>
+              <tr><td class="text-muted">หมดอายุ</td><td>${fmtDate(e.expireDate)}</td></tr>
+              <tr><td class="text-muted">ผู้รับผิดชอบ</td><td>${esc(e.owner)}</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>ตำแหน่ง GPS</h3></div>
+          <div class="panel-body">
+            <button class="btn btn-outline-fire w-100 mb-2" onclick="captureGPS()"><i class="bi bi-geo-alt"></i> ดึงตำแหน่งปัจจุบัน</button>
+            <div id="gpsResult" class="small text-muted">ยังไม่ได้ระบุตำแหน่ง</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>ข้อมูลการตรวจ</h3></div>
+          <div class="panel-body">
+            <div class="row g-3">
+              <div class="col-md-4"><label class="form-label small fw-semibold">วันที่ตรวจ</label><input type="date" class="form-control" id="insDate" value="${isoDate(new Date())}"></div>
+              <div class="col-md-4"><label class="form-label small fw-semibold">ผู้ตรวจ</label><input class="form-control" id="insInspector" value="${esc(currentUser.name)}"></div>
+              <div class="col-md-4"><label class="form-label small fw-semibold">แรงดัน (%)</label><input type="number" class="form-control" id="insPressure" min="0" max="100" value="90"></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>Checklist การตรวจสอบ</h3><span class="small text-muted">แตะเพื่อเลือกผล</span></div>
+          <div class="panel-body" id="checklistWrap"></div>
+        </div>
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>ถ่ายรูปประกอบ</h3></div>
+          <div class="panel-body">
+            <div class="d-flex gap-2 flex-wrap mb-2">
+              <select class="form-select form-select-sm" id="photoTag" style="width:auto">
+                <option>ภาพถัง</option><option>ภาพตำแหน่งติดตั้ง</option><option>ก่อนตรวจ</option><option>หลังตรวจ</option>
+              </select>
+              <label class="btn btn-sm btn-outline-fire mb-0"><i class="bi bi-camera"></i> เพิ่มรูปภาพ
+                <input type="file" accept="image/*" capture="environment" multiple hidden onchange="addPhotos(event)">
+              </label>
+            </div>
+            <div class="d-flex gap-2 flex-wrap" id="photoPreview"></div>
+          </div>
+        </div>
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>ลายเซ็นรับรอง</h3></div>
+          <div class="panel-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">ผู้ตรวจ</label>
+                <canvas id="sigPad"></canvas>
+                <button class="btn btn-sm btn-outline-fire mt-2" onclick="clearSig()">ล้างลายเซ็น</button>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold">หมายเหตุเพิ่มเติม</label>
+                <textarea class="form-control" id="insNotes" rows="6" placeholder="ระบุปัญหาที่พบ หรือข้อเสนอแนะ..."></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end no-print">
+          <button class="btn btn-outline-fire" data-bs-dismiss="modal" onclick="closeInspectModal()">ยกเลิก</button>
+          <button class="btn btn-fire px-4" onclick="submitInspection()"><i class="bi bi-check2-circle"></i> บันทึกผลการตรวจ</button>
+        </div>
+      </div>
+    </div>`;
+  // checklist
+  const wrap = document.getElementById('checklistWrap');
+  wrap.innerHTML = CHECK_ITEMS.map(ci=>`
+    <div class="check-item" data-key="${ci.key}">
+      <div class="lbl"><i class="bi bi-dot"></i>${ci.label}</div>
+      <div class="chk-group">
+        <div class="chk-opt ok sel" onclick="setCheck('${ci.key}','ok',this)">ปกติ</div>
+        <div class="chk-opt bad" onclick="setCheck('${ci.key}','bad',this)">ผิดปกติ</div>
+      </div>
+    </div>`).join('');
+  wrap.dataset.state = JSON.stringify(Object.fromEntries(CHECK_ITEMS.map(c=>[c.key,'ok'])));
+  // sig pad
+  setTimeout(()=>{
+    const canvas = document.getElementById('sigPad');
+    if(canvas && typeof SignaturePad !== 'undefined'){
+      canvas.width = canvas.offsetWidth; canvas.height = 150;
+      sigPad = new SignaturePad(canvas, {penColor:'#20211F'});
+    }
+  }, 50);
+}
+function setCheck(key, val, el){
+  const wrap = document.getElementById('checklistWrap');
+  const state = JSON.parse(wrap.dataset.state);
+  state[key] = val;
+  wrap.dataset.state = JSON.stringify(state);
+  const item = el.closest('.check-item');
+  item.querySelectorAll('.chk-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function clearSig(){ if(sigPad) sigPad.clear(); }
+function captureGPS(){
+  const res = document.getElementById('gpsResult');
+  res.textContent = 'กำลังค้นหาตำแหน่ง...';
+  if(!navigator.geolocation){ res.textContent = 'อุปกรณ์นี้ไม่รองรับ GPS'; return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    currentGPS = {lat:pos.coords.latitude.toFixed(6), lng:pos.coords.longitude.toFixed(6)};
+    res.innerHTML = `📍 ${esc(currentGPS.lat)}, ${esc(currentGPS.lng)} <br><a href="${safeUrl('https://www.google.com/maps?q='+encodeURIComponent(currentGPS.lat)+','+encodeURIComponent(currentGPS.lng))}" target="_blank" rel="noopener noreferrer">เปิดใน Google Maps <i class="bi bi-box-arrow-up-right"></i></a>`;
+  }, err=>{
+    res.textContent = 'ไม่สามารถเข้าถึงตำแหน่งได้ (' + err.message + ') — ใช้พิกัดที่บันทึกไว้ของถังแทนได้';
+  }, {enableHighAccuracy:true, timeout:8000});
+}
+function addPhotos(evt){
+  const files = Array.from(evt.target.files||[]);
+  const tag = document.getElementById('photoTag').value;
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      currentPhotos.push({dataUrl:reader.result, tag});
+      renderPhotoPreview();
+    };
+    reader.readAsDataURL(f);
+  });
+  evt.target.value='';
+}
+function renderPhotoPreview(){
+  document.getElementById('photoPreview').innerHTML = currentPhotos.map((p,i)=>`
+    <div class="photo-slot">
+      <img src="${safeUrl(p.dataUrl)}" class="photo-thumb">
+      <div class="tag">${esc(p.tag)}</div>
+      <div class="rm" onclick="removePhoto(${i})">✕</div>
+    </div>`).join('');
+}
+function removePhoto(i){ currentPhotos.splice(i,1); renderPhotoPreview(); }
+
+async function submitInspection(){
+  const e = extinguishers.find(x=>x.id===currentInspectTarget);
+  const wrap = document.getElementById('checklistWrap');
+  const checklist = JSON.parse(wrap.dataset.state);
+  const hasBad = Object.values(checklist).some(v=>v==='bad');
+  const date = document.getElementById('insDate').value;
+  const inspector = document.getElementById('insInspector').value;
+  const pressure = document.getElementById('insPressure').value;
+  const notes = document.getElementById('insNotes').value;
+  const sigData = (sigPad && !sigPad.isEmpty()) ? sigPad.toDataURL() : null;
+  const result = hasBad? 'ไม่ผ่าน':'ผ่าน';
+
+  Swal.fire({title:'กำลังบันทึกผลตรวจ...', allowOutsideClick:false, didOpen:()=>Swal.showLoading()});
+
+  let newId = 'insp-'+Date.now();
+  try{
+    if(!DEMO_MODE){
+      const res = await apiPost('submitInspection', {
+        extId: e.id, date, inspector, actingUser: currentUser?.user, pressure: pressure+'%', checklist, result, notes,
+        photosBase64: toPhotoPayload(currentPhotos),
+        signatureBase64: sigData || '',
+        gpsLat: (currentGPS||{}).lat || e.lat, gpsLng: (currentGPS||{}).lng || e.lng,
+      });
+      newId = res.id || newId;
+    }
+  } catch(err){
+    Swal.fire({icon:'error', title:'บันทึกไม่สำเร็จ', text:err.message||'ไม่สามารถเชื่อมต่อ Backend ได้', confirmButtonColor:'#C62828'});
+    return;
+  }
+
+  const record = {
+    id:newId, extId:e.id, date, inspector, pressure: pressure+'%',
+    checklist, result, notes,
+    photos: currentPhotos.slice(), gps: currentGPS || {lat:e.lat, lng:e.lng}, sig: sigData,
+  };
+  inspections.push(record);
+  e.lastInspected = date;
+  e.forceStatus = hasBad ? 'need_repair' : '';
+  if(Number(pressure) < 70 && !hasBad) e.forceStatus = 'low_pressure';
+  logActivity(`บันทึกผลตรวจ ${e.code} — ${record.result}`);
+
+  inspectModalInstance?.hide();
+  Swal.fire({icon:'success', title:'บันทึกผลการตรวจสำเร็จ', html:`${e.code} — ผลตรวจ: <b>${record.result}</b>`, confirmButtonColor:'#C62828'}).then(()=>{
+    closeInspectModal();
+  });
+  renderDashboard(); populateFilterOptions();
+  // รีเฟรชหน้าปัจจุบันที่เปิดค้างอยู่หลังป็อปอัปปิด (ถ้ามีข้อมูลเกี่ยวข้อง)
+  const activeView = document.querySelector('.view.active')?.id;
+  if(activeView==='view-list') renderListView();
+  if(activeView==='view-history') renderHistoryView();
+  if(activeView==='view-scan') renderScanPickList();
+}
+
+/* ---------------- HISTORY ---------------- */
+function renderHistoryView(){
+  const extId = document.getElementById('hExtSelect').value;
+  const building = document.getElementById('hBuilding').value;
+  let list = inspections.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(extId) list = list.filter(i=>i.extId===extId);
+  if(building) list = list.filter(i=> extinguishers.find(e=>e.id===i.extId)?.building===building);
+  if(!list.length){ document.getElementById('historyTimeline').innerHTML = '<div class="empty-state"><i class="bi bi-clock-history"></i>ไม่พบประวัติการตรวจตามเงื่อนไข</div>'; return; }
+  document.getElementById('historyTimeline').innerHTML = `<div class="timeline">${list.map(h=>{
+    const e = extinguishers.find(x=>x.id===h.extId);
+    const badItems = Object.entries(h.checklist).filter(([k,v])=>v==='bad').map(([k])=> CHECK_ITEMS.find(c=>c.key===k)?.label).filter(Boolean);
+    return `<div class="timeline-item">
+      <div class="date">${fmtDate(h.date)}</div>
+      <div class="card-mini">
+        <div class="d-flex justify-content-between flex-wrap gap-2">
+          <div><b>${esc(e?.code||'-')}</b> <span class="text-muted small">· ${esc(e?.building||'')} ${esc(e?.room||'')}</span></div>
+          <span class="badge-status ${h.result==='ผ่าน'?'st-normal':'st-need_repair'}">${esc(h.result)}</span>
+        </div>
+        <div class="small text-muted mt-1">ผู้ตรวจ: ${esc(h.inspector)} · แรงดัน ${esc(h.pressure)}${hasGPS(h.gps)? ' · GPS '+esc(h.gps.lat)+', '+esc(h.gps.lng) : ''}</div>
+        ${badItems.length? `<div class="small text-danger mt-1"><i class="bi bi-exclamation-triangle"></i> พบผิดปกติ: ${esc(badItems.join(', '))}</div>`:''}
+        ${h.notes? `<div class="small mt-1">หมายเหตุ: ${esc(h.notes)}</div>`:''}
+        ${h.photos && h.photos.length? `<div class="d-flex gap-2 flex-wrap mt-2">${h.photos.map(p=>`<img src="${safeUrl(p.dataUrl)}" class="photo-thumb" style="width:56px;height:56px">`).join('')}</div>`:''}
+        ${h.sig? `<div class="mt-2"><span class="small text-muted">ลายเซ็นผู้ตรวจ:</span><br><img src="${safeUrl(h.sig)}" style="height:44px"></div>`:''}
+        ${h.photoFiles && h.photoFiles.length? `<div class="d-flex gap-2 flex-wrap mt-2">${h.photoFiles.map(f=>`<img data-fid="${esc(f)}" class="photo-thumb" style="width:56px;height:56px" alt="">`).join('')}</div>`:''}
+        ${h.sigFile? `<div class="mt-2"><span class="small text-muted">ลายเซ็นผู้ตรวจ:</span><br><img data-fid="${esc(h.sigFile)}" style="height:44px" alt=""></div>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+  hydrateDriveImages(document.getElementById('historyTimeline'));
+}
+
+/* ---------------- REPORTS ---------------- */
+function renderReport(){
+  const b = document.getElementById('rBuilding').value;
+  const from = document.getElementById('rFrom').value;
+  const to = document.getElementById('rTo').value;
+  const insp = document.getElementById('rInspector').value;
+  let list = inspections.map(i=>({...i, ext:extinguishers.find(e=>e.id===i.extId)}));
+  list = list.filter(i=>i.ext);
+  if(b) list = list.filter(i=>i.ext.building===b);
+  if(from) list = list.filter(i=>i.date>=from);
+  if(to) list = list.filter(i=>i.date<=to);
+  if(insp) list = list.filter(i=>i.inspector===insp);
+  list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  document.getElementById('reportRange').textContent = `ช่วงข้อมูล: ${from||'เริ่มต้น'} ถึง ${to||'ปัจจุบัน'} · อาคาร: ${b||'ทั้งหมด'} · จำนวน ${list.length} รายการ · พิมพ์เมื่อ ${fmtDateTime(new Date())}`;
+
+  const total = list.length;
+  const passed = list.filter(i=>i.result==='ผ่าน').length;
+  const failed = total-passed;
+  const rate = total? Math.round(passed/total*100):0;
+  document.getElementById('reportStats').innerHTML = [
+    {l:'จำนวนการตรวจ', v:total, c:'var(--red-600)'},
+    {l:'ผ่าน', v:passed, c:'var(--ok)'},
+    {l:'ไม่ผ่าน', v:failed, c:'var(--bad)'},
+    {l:'อัตราผ่าน', v:rate+'%', c:'var(--warn)'},
+  ].map(s=>`<div class="col-6 col-lg-3"><div class="stat-card"><div class="lbl">${s.l}</div><div class="val" style="color:${s.c}">${s.v}</div></div></div>`).join('');
+
+  document.getElementById('reportTable').innerHTML = `
+    <thead><tr><th>วันที่</th><th>รหัสถัง</th><th>อาคาร</th><th>ผู้ตรวจ</th><th>แรงดัน</th><th>ผล</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>${list.map(i=>`
+      <tr>
+        <td>${fmtDate(i.date)}</td>
+        <td class="fw-semibold">${esc(i.ext.code)}</td>
+        <td>${esc(i.ext.building)}</td>
+        <td>${esc(i.inspector)}</td>
+        <td>${esc(i.pressure)}</td>
+        <td><span class="badge-status ${i.result==='ผ่าน'?'st-normal':'st-need_repair'}">${esc(i.result)}</span></td>
+        <td>${esc(i.notes)||'-'}</td>
+      </tr>`).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">ไม่มีข้อมูลตามเงื่อนไข</td></tr>'}</tbody>`;
+  window._reportList = list;
+}
+function exportReportCSV(){
+  const list = window._reportList || [];
+  const rows = [['วันที่','รหัสถัง','อาคาร','ผู้ตรวจ','แรงดัน','ผล','หมายเหตุ']];
+  list.forEach(i=>rows.push([i.date, i.ext.code, i.ext.building, i.inspector, i.pressure, i.result, (i.notes||'').replace(/,/g,' ')]));
+  downloadCSV(rows, 'inspection_report.csv');
+}
+function exportCSV(){
+  const rows = [['รหัสถัง','Serial','ประเภท','ขนาด','อาคาร','ชั้น','ห้อง','วันติดตั้ง','วันหมดอายุ','บริษัท','ผู้รับผิดชอบ','สถานะ','ตรวจล่าสุด']];
+  extinguishers.forEach(e=>rows.push([e.code,e.serial,e.type,e.size,e.building,e.floor,e.room,e.installDate,e.expireDate,e.company,e.owner,STATUS[computeStatus(e)].label,e.lastInspected||'-']));
+  downloadCSV(rows, 'extinguishers.csv');
+}
+/** ป้องกัน CSV/Formula Injection: ถ้าค่าขึ้นต้นด้วย = + - @ (หรือ tab/CR) โปรแกรมสเปรดชีตอาจตีความเป็นสูตรและรันคำสั่งได้
+    จึงเติม ' นำหน้าให้ถูกอ่านเป็นข้อความเสมอ */
+function csvSafeCell(v){
+  let s = String(v===null||v===undefined? '' : v);
+  if(/^[=+\-@\t\r]/.test(s)) s = "'"+s;
+  return s;
+}
+function downloadCSV(rows, filename){
+  const csv = '\uFEFF'+rows.map(r=>r.map(v=>`"${csvSafeCell(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+}
+
+/* ---------------- ADMIN ---------------- */
+document.getElementById('adminTabs').addEventListener('click', e=>{
+  const a = e.target.closest('a[data-tab]'); if(!a) return; e.preventDefault();
+  document.querySelectorAll('#adminTabs .nav-link').forEach(l=>l.classList.remove('active'));
+  a.classList.add('active');
+  renderAdmin(a.dataset.tab);
+});
+async function renderAdmin(tab){
+  const el = document.getElementById('adminTabContent');
+  if(tab==='users'){
+    el.innerHTML = `<div class="panel"><div class="panel-head"><h3>ผู้ใช้งานระบบ</h3><span class="small text-muted">${DEMO_MODE?'ข้อมูลจำลอง':'ข้อมูลจริงจากชีต Users'}</span></div>
+      <div class="panel-body text-center text-muted small" id="usersTableWrap">กำลังโหลด...</div></div>`;
+    let userList = USERS.map(u=>({username:u.user, fullName:u.name, role:u.role, active:true}));
+    if(!DEMO_MODE){
+      try{ userList = await apiGet('listUsers'); }
+      catch(err){ userList = []; if(!err.silent) Swal.fire({icon:'error', title:'โหลดรายชื่อผู้ใช้ไม่สำเร็จ', text:err.message, confirmButtonColor:'#C62828'}); }
+    }
+    document.getElementById('usersTableWrap').outerHTML = `
+      <div class="table-responsive"><table class="table table-app mb-0">
+        <thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อ-สกุล</th><th>บทบาท</th><th>สถานะ</th><th>สิทธิ์การใช้งาน</th>${DEMO_MODE?'':'<th>การจัดการ</th>'}</tr></thead>
+        <tbody>${userList.map(u=>{
+          const statusBadge = u.active===false ? '<span class="badge-status st-need_repair">รอการอนุมัติ</span>' : '<span class="badge-status st-normal">ใช้งานอยู่</span>';
+          const actionBtn = DEMO_MODE ? '' : (u.active===false
+            ? `<button class="btn btn-sm btn-fire" onclick="approveUser('${escJs(u.username)}')"><i class="bi bi-check2"></i> อนุมัติ</button>`
+            : `<button class="btn btn-sm btn-outline-fire" onclick="suspendUser('${escJs(u.username)}')"><i class="bi bi-slash-circle"></i> ระงับ</button>`);
+          return `<tr><td class="fw-semibold">${esc(u.username)}</td><td>${esc(u.fullName)}</td><td><span class="badge-status ${ROLE_BADGE_CLASS[u.role]||'st-normal'}">${esc(ROLE_LABEL[u.role]||u.role)}</span></td>
+          <td>${statusBadge}</td>
+          <td class="small text-muted">${permsText(u.role)}</td>${DEMO_MODE?'':`<td>${actionBtn}</td>`}</tr>`;
+        }).join('') || `<tr><td colspan="${DEMO_MODE?5:6}" class="text-center text-muted py-4">ไม่พบผู้ใช้งาน</td></tr>`}</tbody>
+      </table></div>`;
+  } else if(tab==='importexport'){
+    el.innerHTML = `<div class="row g-3">
+      <div class="col-md-6"><div class="panel"><div class="panel-head"><h3>Export ข้อมูล</h3></div><div class="panel-body">
+        <p class="small text-muted">ส่งออกข้อมูลทั้งหมดของระบบ (ถังดับเพลิง + ประวัติการตรวจ) เป็นไฟล์สำรอง</p>
+        <button class="btn btn-fire w-100 mb-2" onclick="exportCSV()"><i class="bi bi-download"></i> Export ถังดับเพลิง (CSV)</button>
+        <button class="btn btn-outline-fire w-100" onclick="backupJSON()"><i class="bi bi-file-earmark-zip"></i> Backup ข้อมูลทั้งหมด (JSON)</button>
+      </div></div></div>
+      <div class="col-md-6"><div class="panel"><div class="panel-head"><h3>Import / Restore</h3></div><div class="panel-body">
+        <p class="small text-muted">นำเข้าไฟล์สำรอง JSON ที่เคย Export ไว้ เพื่อกู้คืนข้อมูล</p>
+        ${DEMO_MODE ? '<input type="file" accept=".json" class="form-control mb-2" onchange="restoreJSON(event)">' : '<div class="alert alert-warning small mb-2">ปิดใช้งานเมื่อเชื่อมต่อ Google Sheet จริง (ข้อมูลอยู่ในชีต ไม่ใช่ในเบราว์เซอร์) — หากต้องการกู้คืน ให้ใช้ File &gt; Version history ของ Google Sheet</div>'}
+        <div class="form-text">รองรับเฉพาะไฟล์ JSON ที่สร้างจากปุ่ม Backup ของระบบนี้</div>
+      </div></div></div>
+    </div>`;
+  } else if(tab==='log'){
+    let logs = activityLog.slice().reverse();
+    if(!DEMO_MODE){
+      try{ logs = (await apiGet('listLog')).map(r=>({user:r.user, action:r.action+(r.detail?' — '+r.detail:''), time:r.timestamp})); }
+      catch(err){ if(err.silent) return; logs = []; Swal.fire({icon:'error', title:'โหลด Log ไม่สำเร็จ', text:err.message, confirmButtonColor:'#C62828'}); }
+    }
+    el.innerHTML = `<div class="panel"><div class="panel-head"><h3>Log การใช้งานระบบ</h3></div>
+      <div class="panel-body">${logs.map(l=>`
+        <div class="d-flex justify-content-between py-2" style="border-bottom:1px solid var(--ink-100)">
+          <div><b>${esc(l.user)}</b> — ${esc(l.action)}</div><div class="small text-muted">${fmtDateTime(l.time)}</div>
+        </div>`).join('') || '<div class="empty-state">ไม่มีบันทึกกิจกรรม</div>'}</div></div>`;
+  } else if(tab==='settings'){
+    el.innerHTML = `<div class="panel"><div class="panel-head"><h3>ช่องทางการแจ้งเตือน</h3></div><div class="panel-body">
+      <p class="small text-muted mb-2">การแจ้งเตือนตั้งค่าที่ฝั่ง Backend (Code.gs) ไม่สามารถเปิด/ปิดจากหน้านี้ได้</p>
+      <ul class="small text-muted mb-0">
+        <li>อีเมล: ตั้งค่า <code>ADMIN_EMAIL</code> ใน Code.gs — ส่งเมื่อผลตรวจไม่ผ่าน มีผู้สมัครใหม่ และสรุปรายวัน</li>
+        <li>LINE: ใช้ LINE Messaging API — ตั้ง <code>LINE_CHANNEL_TOKEN</code> และ <code>LINE_TO</code> ใน Script Properties</li>
+        <li>สรุปถังใกล้หมดอายุ / เลยรอบตรวจรายวัน: ตั้ง Trigger ให้ฟังก์ชัน <code>dailyExpiryCheck</code></li>
+      </ul>
+    </div></div>`;
+  }
+}
+function permsText(role){
+  return {admin:'จัดการทั้งหมด รวมผู้ใช้งานและตั้งค่าระบบ', inspector:'ตรวจเช็ค / บันทึกผล / สแกน QR', supervisor:'ดูข้อมูลทั้งหมด อนุมัติ และลงลายเซ็นรับรอง', exec:'ดู Dashboard และรายงานเท่านั้น'}[role];
+}
+/** อนุมัติผู้ใช้ที่สมัครสมาชิกเอง ให้เข้าสู่ระบบได้ */
+async function approveUser(username){
+  const confirm = await Swal.fire({icon:'question', title:'อนุมัติผู้ใช้นี้?', text:username, showCancelButton:true, confirmButtonText:'อนุมัติ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#C62828'});
+  if(!confirm.isConfirmed) return;
+  try{
+    const res = await apiPost('setUserActive', {username, active:true, updatedBy:currentUser?.user||'admin'});
+    if(!res.success) throw new Error(res.message||'เกิดข้อผิดพลาด');
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'อนุมัติผู้ใช้แล้ว', showConfirmButton:false, timer:2000});
+    renderAdmin('users');
+  } catch(err){
+    Swal.fire({icon:'error', title:'ทำรายการไม่สำเร็จ', text:err.message, confirmButtonColor:'#C62828'});
+  }
+}
+/** ระงับการใช้งานบัญชี (เช่น พนักงานลาออก หรือทำผิดกฎ) */
+async function suspendUser(username){
+  const confirm = await Swal.fire({icon:'warning', title:'ระงับการใช้งานผู้ใช้นี้?', text:username+' จะไม่สามารถเข้าสู่ระบบได้จนกว่าจะอนุมัติใหม่', showCancelButton:true, confirmButtonText:'ระงับ', cancelButtonText:'ยกเลิก', confirmButtonColor:'#C62828'});
+  if(!confirm.isConfirmed) return;
+  try{
+    const res = await apiPost('setUserActive', {username, active:false, updatedBy:currentUser?.user||'admin'});
+    if(!res.success) throw new Error(res.message||'เกิดข้อผิดพลาด');
+    Swal.fire({toast:true, position:'top-end', icon:'success', title:'ระงับการใช้งานแล้ว', showConfirmButton:false, timer:2000});
+    renderAdmin('users');
+  } catch(err){
+    Swal.fire({icon:'error', title:'ทำรายการไม่สำเร็จ', text:err.message, confirmButtonColor:'#C62828'});
+  }
+}
+function backupJSON(){
+  const data = {extinguishers, inspections, exportedAt:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='firecheck_backup.json'; a.click();
+}
+function restoreJSON(evt){
+  if(!DEMO_MODE){ Swal.fire({icon:'info', title:'ไม่รองรับในโหมดเชื่อมต่อจริง', text:'ใช้ Version history ของ Google Sheet เพื่อกู้คืนข้อมูล', confirmButtonColor:'#C62828'}); return; }
+  const file = evt.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      // ตรวจสอบโครงสร้างข้อมูลก่อนนำเข้า (ป้องกันไฟล์แปลกปลอมที่ไม่ใช่ backup จริงทำให้ระบบพัง หรือฝังข้อมูลผิดรูปแบบ)
+      if(Array.isArray(data.extinguishers) && Array.isArray(data.inspections)){
+        extinguishers = data.extinguishers; inspections = data.inspections;
+        populateFilterOptions(); renderDashboard(); renderListView();
+        Swal.fire({icon:'success', title:'กู้คืนข้อมูลสำเร็จ', confirmButtonColor:'#C62828'});
+      } else throw new Error();
+    }catch(e){ Swal.fire({icon:'error', title:'ไฟล์ไม่ถูกต้อง', confirmButtonColor:'#C62828'}); }
+  };
+  reader.readAsText(file);
+}
+function logActivity(action){ activityLog.push({time:new Date(), user:currentUser?.user||'system', action}); }
+
+/* ---------------- NOTIFICATIONS ---------------- */
+function getNotifItems(){
+  return extinguishers.map(e=>({...e,status:computeStatus(e)})).filter(e=>['near_expiry','need_repair','expired','damaged','low_pressure','not_inspected'].includes(e.status));
+}
+function updateNotifBadge(){
+  const n = getNotifItems().length;
+  document.getElementById('notifCount').textContent = n;
+  document.getElementById('bellDot').style.display = n? 'block':'none';
+}
+function renderNotifications(){
+  const items = getNotifItems();
+  document.getElementById('notifList').innerHTML = items.length? items.map(e=>`
+    <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid var(--ink-100)">
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge-status st-${e.status}">${STATUS[e.status].label}</span>
+        <div><b>${esc(e.code)}</b><div class="small text-muted">${esc(e.building)} · ${esc(e.room)}</div></div>
+      </div>
+      <button class="btn btn-sm btn-outline-fire" onclick="openDetail('${escJs(e.id)}')">ดูรายละเอียด</button>
+    </div>`).join('') : '<div class="empty-state"><i class="bi bi-check2-circle"></i>ไม่มีรายการที่ต้องติดตามในขณะนี้</div>';
+}
+
+/* ---------------- DARK MODE (light utility) ---------------- */
+let dark=false;
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  dark=!dark;
+  document.documentElement.style.filter = dark? 'invert(1) hue-rotate(180deg)':'';
+  document.getElementById('themeToggle').innerHTML = dark? '<i class="bi bi-sun"></i>':'<i class="bi bi-moon-stars"></i>';
+});
+</script>
+</body>
+</html>
