@@ -56,6 +56,8 @@ const TEXT_COLS = {
   [SHEET_LOG]: ['timestamp','user','action','detail'],
 };
 const TIMESTAMP_COLS = ['createdAt'];
+// หัวคอลัมน์ที่ต้องเป็นข้อความเสมอ — ถ้า Sheets เก็บเป็นตัวเลข (เช่น รหัสถัง 1000000) จะแปลงกลับเป็นข้อความตอนอ่าน
+const TEXT_HEADERS = Object.keys(TEXT_COLS).reduce((s, k) => { TEXT_COLS[k].forEach(h => { s[h] = true; }); return s; }, {});
 
 /* สิทธิ์ของแต่ละ action ฝั่ง server (แหล่งความจริงเดียว — ฝั่งหน้าเว็บมีไว้แค่ซ่อนปุ่ม) */
 const ALL_ROLES = ['admin', 'supervisor', 'inspector', 'exec'];
@@ -551,6 +553,67 @@ function dailyExpiryCheck() {
   sendLine(body);
 }
 
+/* ------------------------------ DIAGNOSE ------------------------------ */
+/**
+ * รันเองใน Apps Script Editor (เลือก diagnose > Run) แล้วดูผลที่ Execution log
+ * ตรวจ: ชีต/คอลัมน์, ผู้ใช้แอดมิน, สิทธิ์ Drive/Mail/Lock/Cache, และข้อมูลถังที่อาจทำให้บันทึกผลตรวจพัง
+ * ไม่แก้ไขข้อมูลใด ๆ (ไฟล์ทดสอบใน Drive จะถูกย้ายลงถังขยะทันที)
+ */
+function diagnose() {
+  const out = [];
+  const check = (name, fn) => {
+    try { const r = fn(); out.push('OK    ' + name + (r ? ' — ' + r : '')); }
+    catch (e) { out.push('FAIL  ' + name + ' — ' + e.message); }
+  };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  check('สคริปต์ผูกกับ Google Sheet', () => ss.getName());
+  Object.keys(HEADERS).forEach(n => check('ชีต ' + n, () => {
+    const sh = ss.getSheetByName(n);
+    if (!sh) throw new Error('ไม่พบชีตชื่อนี้ (ต้องสะกดตรงเป๊ะ) — ให้รัน setupSheets ใน Sheet ตัวเดียวกับที่ผูกสคริปต์');
+    const have = headersOf(sh), miss = HEADERS[n].filter(h => have.indexOf(h) < 0);
+    if (miss.length) throw new Error('ขาดคอลัมน์: ' + miss.join(', ') + ' — ให้รัน setupSheets ซ้ำ');
+    return Math.max(0, sh.getLastRow() - 1) + ' แถวข้อมูล';
+  }));
+  check('schema_v (setupSheets/ensureSchema เคยรันสำเร็จ)', () => prop('schema_v') || 'ยังไม่ตั้งค่า (จะตั้งเองในคำขอแรก)');
+  check('มีแอดมินที่เปิดใช้งานอย่างน้อย 1 คน', () => {
+    const n = readAll(usersSheet()).filter(u => u.role === 'admin' && isActive(u.active)).length;
+    if (!n) throw new Error('ไม่มี — รัน bootstrapAdmin');
+    return n + ' คน';
+  });
+  check('Drive: สร้างโฟลเดอร์ + เขียนไฟล์ได้', () => {
+    const f = getOrCreatePhotoFolder();
+    f.createFile(Utilities.newBlob('diagnose', 'text/plain', 'diagnose.txt')).setTrashed(true);
+    return f.getName();
+  });
+  check('LockService', () => withLock(() => 'ได้ล็อก'));
+  check('CacheService', () => {
+    const c = CacheService.getScriptCache(); c.put('diag', '1', 10);
+    if (c.get('diag') !== '1') throw new Error('อ่านค่าที่เพิ่งเขียนไม่ได้');
+    return 'ok';
+  });
+  check('เขตเวลาของ Sheet', () => tz());
+  check('โควตาอีเมลคงเหลือวันนี้', () => MailApp.getRemainingDailyQuota() + ' ฉบับ');
+  check('ข้อมูลถังใน Extinguishers', () => {
+    const list = readAll(getSheet(SHEET_EXT)), seen = {}, prob = [];
+    list.forEach((e, i) => {
+      const row = i + 2;
+      if (!e.id) prob.push('แถว ' + row + ' ไม่มี id');
+      else if (seen[e.id]) prob.push('แถว ' + row + ' id ซ้ำกับแถว ' + seen[e.id]);
+      else seen[e.id] = row;
+      if (!String(e.code).trim()) prob.push('แถว ' + row + ' ไม่มีรหัสถัง');
+      if (e.lat !== '' && !isFinite(Number(e.lat))) prob.push('แถว ' + row + ' ละติจูดไม่ใช่ตัวเลข (' + e.lat + ')');
+      if (e.lng !== '' && !isFinite(Number(e.lng))) prob.push('แถว ' + row + ' ลองจิจูดไม่ใช่ตัวเลข (' + e.lng + ')');
+    });
+    if (prob.length) throw new Error(prob.slice(0, 10).join('; '));
+    const rawCodes = getSheet(SHEET_EXT).getLastRow() > 1
+      ? getSheet(SHEET_EXT).getRange(2, headersOf(getSheet(SHEET_EXT)).indexOf('code') + 1, getSheet(SHEET_EXT).getLastRow() - 1, 1).getValues().filter(r => typeof r[0] === 'number').length : 0;
+    return list.length + ' ถัง ไม่พบปัญหา' + (rawCodes ? ' (มี ' + rawCodes + ' แถวที่รหัสถังในชีตเป็นตัวเลข — ระบบแปลงเป็นข้อความให้แล้ว แต่ควรพิมพ์ใหม่ในชีตให้เป็นข้อความ)' : '');
+  });
+  const report = out.join('\n');
+  console.log(report);
+  return report;
+}
+
 /* ------------------------------ SHEET HELPERS ------------------------------ */
 function getSheet(name) {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
@@ -572,6 +635,7 @@ function todayStr() { return Utilities.formatDate(new Date(), tz(), 'yyyy-MM-dd'
 /** แปลง Date ที่ Sheets สร้างเอง (ข้อมูลเก่า) ให้เป็นข้อความ ไม่ให้วันที่เลื่อนตามเขตเวลา UTC */
 function cellValue(header, v) {
   if (v instanceof Date) return TIMESTAMP_COLS.indexOf(header) >= 0 ? fmtTs(v) : Utilities.formatDate(v, tz(), 'yyyy-MM-dd');
+  if (typeof v === 'number' && TEXT_HEADERS[header]) return String(v);
   return v;
 }
 function rowToObject(headers, row) {
